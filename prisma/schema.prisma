@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum FiveElement {
+  WOOD
+  FIRE
+  EARTH
+  METAL
+  WATER
+}
+
+enum TagCategory {
+  WISH
+  EMOTION
+  RELATIONSHIP_GOAL
+}
+
+enum CalendarType {
+  SOLAR
+  LUNAR
+}
+
+enum ConsentType {
+  FIVE_ELEMENTS_BIRTH_INFO
+}
+
+model AnonymousSession {
+  id               String   @id @default(uuid()) @db.Uuid
+  sessionTokenHash String   @unique
+  createdAt        DateTime @default(now())
+  lastSeenAt       DateTime @default(now())
+  expiresAt        DateTime
+
+  wishSessions   WishSession[]
+  consentRecords ConsentRecord[]
+}
+
+model Stone {
+  id          String       @id @default(uuid()) @db.Uuid
+  slug        String       @unique
+  nameKo      String
+  nameEn      String
+  summary     String
+  description String
+  colorHex    String
+  imageUrl    String?
+  element     FiveElement?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  stoneTags           StoneTag[]
+  recommendations     Recommendation[]
+  fiveElementProfiles FiveElementProfile[]
+}
+
+model Tag {
+  id        String      @id @default(uuid()) @db.Uuid
+  slug      String      @unique
+  category  TagCategory
+  labelKo   String
+  createdAt DateTime    @default(now())
+
+  stoneTags             StoneTag[]
+  primaryWishSessions   WishSession[] @relation("PrimaryWish")
+  secondaryWishSessions WishSession[] @relation("SecondaryWish")
+  heartWishSessions     WishSession[] @relation("HeartTag")
+
+  @@index([category])
+}
+
+model StoneTag {
+  id      String @id @default(uuid()) @db.Uuid
+  stoneId String @db.Uuid
+  tagId   String @db.Uuid
+  weight  Float
+
+  stone Stone @relation(fields: [stoneId], references: [id], onDelete: Cascade)
+  tag   Tag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([stoneId, tagId])
+  @@index([tagId])
+}
+
+model WishSession {
+  id                 String   @id @default(uuid()) @db.Uuid
+  anonymousSessionId String   @db.Uuid
+  primaryWishTagId   String   @db.Uuid
+  secondaryWishTagId String?  @db.Uuid
+  heartTagId         String   @db.Uuid
+  freeTextProvided   Boolean  @default(false)
+  createdAt          DateTime @default(now())
+
+  anonymousSession AnonymousSession @relation(fields: [anonymousSessionId], references: [id], onDelete: Cascade)
+  primaryWishTag   Tag              @relation("PrimaryWish", fields: [primaryWishTagId], references: [id])
+  secondaryWishTag Tag?             @relation("SecondaryWish", fields: [secondaryWishTagId], references: [id])
+  heartTag         Tag              @relation("HeartTag", fields: [heartTagId], references: [id])
+  recommendation   Recommendation?
+
+  @@index([anonymousSessionId])
+}
+
+model Recommendation {
+  id                   String   @id @default(uuid()) @db.Uuid
+  wishSessionId        String   @unique @db.Uuid
+  stoneId              String   @db.Uuid
+  fiveElementProfileId String?  @unique @db.Uuid
+  rulesetVersion       String
+  score                Float
+  heartSummary         String
+  rationale            String
+  comfortLines         Json
+  microAction          String
+  usedFallback         Boolean  @default(false)
+  promptVersion        String
+  modelName            String
+  generatedAt          DateTime
+  createdAt            DateTime @default(now())
+
+  wishSession        WishSession         @relation(fields: [wishSessionId], references: [id], onDelete: Cascade)
+  stone              Stone               @relation(fields: [stoneId], references: [id])
+  fiveElementProfile FiveElementProfile? @relation(fields: [fiveElementProfileId], references: [id])
+  feedback           Feedback?
+  shareLinks         ShareLink[]
+
+  @@index([stoneId])
+  @@index([createdAt])
+}
+
+model Feedback {
+  id               String   @id @default(uuid()) @db.Uuid
+  recommendationId String   @unique @db.Uuid
+  rating           Int
+  comment          String?
+  createdAt        DateTime @default(now())
+
+  recommendation Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+}
+
+model ConsentRecord {
+  id                 String      @id @default(uuid()) @db.Uuid
+  anonymousSessionId String      @db.Uuid
+  consentType        ConsentType
+  consentVersion     String
+  granted            Boolean
+  grantedAt          DateTime?
+  revokedAt          DateTime?
+  createdAt          DateTime    @default(now())
+
+  anonymousSession    AnonymousSession     @relation(fields: [anonymousSessionId], references: [id], onDelete: Cascade)
+  fiveElementProfiles FiveElementProfile[]
+
+  @@index([anonymousSessionId])
+}
+
+model FiveElementProfile {
+  id                 String       @id @default(uuid()) @db.Uuid
+  birthDateEncrypted Bytes
+  calendarType       CalendarType
+  isLeapMonth        Boolean      @default(false)
+  birthTimeUnknown   Boolean      @default(false)
+  birthTimeEncrypted Bytes?
+  computedElement    FiveElement
+  balanceJson        Json
+  integratedStoneId  String?      @db.Uuid
+  heartSummary       String
+  rationale          String
+  comfortLines       Json
+  microAction        String
+  usedFallback       Boolean      @default(false)
+  promptVersion      String
+  modelName          String
+  consentRecordId    String       @db.Uuid
+  createdAt          DateTime     @default(now())
+
+  integratedStone Stone?          @relation(fields: [integratedStoneId], references: [id])
+  consentRecord   ConsentRecord   @relation(fields: [consentRecordId], references: [id])
+  recommendation  Recommendation?
+}
+
+model ShareLink {
+  id               String    @id @default(uuid()) @db.Uuid
+  recommendationId String    @db.Uuid
+  scope            String
+  tokenHash        String    @unique
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  viewCount        Int       @default(0)
+  createdAt        DateTime  @default(now())
+
+  recommendation Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}

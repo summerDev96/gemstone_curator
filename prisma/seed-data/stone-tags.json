@@ -1,0 +1,47 @@
+{
+  "_note": "초안 시드 데이터입니다. 전문가 검수 전까지는 확정된 콘텐츠로 취급하지 마세요 (docs/13 참조). weight는 0.0~1.0.",
+  "stoneTags": [
+    { "stoneSlug": "rose-quartz", "tagSlug": "healing", "weight": 0.9 },
+    { "stoneSlug": "rose-quartz", "tagSlug": "inner-peace", "weight": 0.6 },
+    { "stoneSlug": "rose-quartz", "tagSlug": "connection", "weight": 0.5 },
+    { "stoneSlug": "rose-quartz", "tagSlug": "tired", "weight": 0.8 },
+    { "stoneSlug": "rose-quartz", "tagSlug": "calm-longing", "weight": 0.6 },
+    { "stoneSlug": "rose-quartz", "tagSlug": "grateful", "weight": 0.5 },
+
+    { "stoneSlug": "amethyst", "tagSlug": "inner-peace", "weight": 0.9 },
+    { "stoneSlug": "amethyst", "tagSlug": "clarity", "weight": 0.7 },
+    { "stoneSlug": "amethyst", "tagSlug": "lost", "weight": 0.6 },
+    { "stoneSlug": "amethyst", "tagSlug": "calm-longing", "weight": 0.7 },
+    { "stoneSlug": "amethyst", "tagSlug": "anxious-hopeful", "weight": 0.5 },
+
+    { "stoneSlug": "citrine", "tagSlug": "confidence", "weight": 0.9 },
+    { "stoneSlug": "citrine", "tagSlug": "new-beginning", "weight": 0.7 },
+    { "stoneSlug": "citrine", "tagSlug": "determined", "weight": 0.8 },
+    { "stoneSlug": "citrine", "tagSlug": "anxious-hopeful", "weight": 0.5 },
+
+    { "stoneSlug": "clear-quartz", "tagSlug": "clarity", "weight": 0.9 },
+    { "stoneSlug": "clear-quartz", "tagSlug": "inner-peace", "weight": 0.5 },
+    { "stoneSlug": "clear-quartz", "tagSlug": "lost", "weight": 0.7 },
+    { "stoneSlug": "clear-quartz", "tagSlug": "tired", "weight": 0.4 },
+
+    { "stoneSlug": "green-aventurine", "tagSlug": "new-beginning", "weight": 0.9 },
+    { "stoneSlug": "green-aventurine", "tagSlug": "confidence", "weight": 0.5 },
+    { "stoneSlug": "green-aventurine", "tagSlug": "determined", "weight": 0.7 },
+    { "stoneSlug": "green-aventurine", "tagSlug": "anxious-hopeful", "weight": 0.6 },
+
+    { "stoneSlug": "carnelian", "tagSlug": "confidence", "weight": 0.8 },
+    { "stoneSlug": "carnelian", "tagSlug": "new-beginning", "weight": 0.5 },
+    { "stoneSlug": "carnelian", "tagSlug": "determined", "weight": 0.9 },
+    { "stoneSlug": "carnelian", "tagSlug": "tired", "weight": 0.3 },
+
+    { "stoneSlug": "black-tourmaline", "tagSlug": "inner-peace", "weight": 0.8 },
+    { "stoneSlug": "black-tourmaline", "tagSlug": "healing", "weight": 0.6 },
+    { "stoneSlug": "black-tourmaline", "tagSlug": "anxious-hopeful", "weight": 0.7 },
+    { "stoneSlug": "black-tourmaline", "tagSlug": "tired", "weight": 0.5 },
+
+    { "stoneSlug": "sodalite", "tagSlug": "connection", "weight": 0.9 },
+    { "stoneSlug": "sodalite", "tagSlug": "clarity", "weight": 0.5 },
+    { "stoneSlug": "sodalite", "tagSlug": "lost", "weight": 0.5 },
+    { "stoneSlug": "sodalite", "tagSlug": "grateful", "weight": 0.6 }
+  ]
+}

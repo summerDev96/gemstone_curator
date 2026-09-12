@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+/* 원석 큐레이터 디자인 토큰 — docs/05-design-system.md 기준 (라이트 팔레트) */
+:root {
+  --color-bg-base: #fbf9f6;
+  --color-bg-surface: #ffffff;
+  --color-text-primary: #211d1a;
+  --color-text-secondary: #6b6259;
+  --color-border-subtle: #e7e1d8;
+  --color-accent-primary: #7a5cfa;
+  --color-accent-primary-hover: #6647e0;
+  --color-success: #3e8e5a;
+  --color-warning: #b8842e;
+  --color-danger: #c1443c;
+
+  --color-element-wood: #5b8c5a;
+  --color-element-fire: #c0604a;
+  --color-element-earth: #b08d4f;
+  --color-element-metal: #9c9284;
+  --color-element-water: #4a7a8c;
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+}
+
+@theme inline {
+  --color-bg-base: var(--color-bg-base);
+  --color-bg-surface: var(--color-bg-surface);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-border-subtle: var(--color-border-subtle);
+  --color-accent-primary: var(--color-accent-primary);
+  --color-accent-primary-hover: var(--color-accent-primary-hover);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger);
+  --color-element-wood: var(--color-element-wood);
+  --color-element-fire: var(--color-element-fire);
+  --color-element-earth: var(--color-element-earth);
+  --color-element-metal: var(--color-element-metal);
+  --color-element-water: var(--color-element-water);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-full: var(--radius-full);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-size: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

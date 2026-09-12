@@ -1,0 +1,47 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(brew install *)",
+      "Bash(npm install *)",
+      "Bash(npm view *)",
+      "Bash(python3 -c \"import json,sys; v=json.load\\(sys.stdin\\); print\\('\\\\n'.join\\(v[-15:]\\)\\)\")",
+      "Bash(npm install-scripts *)",
+      "Bash(npm audit *)",
+      "Bash(npx playwright *)",
+      "Bash(brew services *)",
+      "Read(//opt/homebrew/Cellar/postgresql@16/16.15/bin/**)",
+      "Bash(mkdir -p /Users/sum/develop/gemstonecurator/src/lib/llm/prompts /Users/sum/develop/gemstonecurator/src/lib/safety)",
+      "Bash(npx vitest *)",
+      "Bash(RUN_LIVE_LLM_TESTS=1 npx vitest run src/app/api/v1/recommendations/basic/route.live.test.ts)",
+      "Bash(npx tsc *)",
+      "Bash(npx eslint *)",
+      "Bash(npx prisma *)",
+      "Bash(tee /tmp/phase2_migration.sql)",
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(32\\).toString\\('base64'\\)\\)\")",
+      "Bash(DATABASE_URL=\"postgresql://sum@localhost:5432/gemstonecurator_test\" npx prisma migrate deploy)",
+      "Bash(npx prisma migrate diff \\\\ *)",
+      "Read(//tmp/**)",
+      "Bash(mkdir -p \"/Users/sum/develop/gemstonecurator/src/app/api/v1/recommendations/[id]/five-elements\")",
+      "Bash(mkdir -p \"/Users/sum/develop/gemstonecurator/src/app/api/v1/recommendations/[id]/share-links\")",
+      "Bash(mkdir -p \"/Users/sum/develop/gemstonecurator/src/app/api/v1/shares/[token]\")",
+      "Bash(mkdir -p \"/Users/sum/develop/gemstonecurator/src/app/api/v1/share-links/[token]\")",
+      "Bash(mkdir -p \"/Users/sum/develop/gemstonecurator/src/app/result/[id]/five-elements/intro\")",
+      "Bash(mkdir -p \"/Users/sum/develop/gemstonecurator/src/app/result/[id]/five-elements/birth-info\")",
+      "Bash(mkdir -p \"/Users/sum/develop/gemstonecurator/src/app/result/[id]/five-elements\")",
+      "Bash(mkdir -p \"/Users/sum/develop/gemstonecurator/src/app/share/[token]\")",
+      "Bash(node browser-phase2.mjs)",
+      "Bash(mv p2-*.png browser-phase2.mjs share-check.png share-check.mjs /private/tmp/claude-501/-Users-sum-develop-gemstonecurator/44019fc4-a95a-411d-ae3b-e6f8b9321f9f/scratchpad/ 2>&1 *)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -)",
+      "Bash(node browser-delete.mjs)",
+      "Bash(mv del-*.png browser-delete.mjs /private/tmp/claude-501/-Users-sum-develop-gemstonecurator/44019fc4-a95a-411d-ae3b-e6f8b9321f9f/scratchpad/ 2>&1 *)",
+      "Bash(node browser-library.mjs)",
+      "Bash(mv lib-*.png browser-library.mjs /private/tmp/claude-501/-Users-sum-develop-gemstonecurator/44019fc4-a95a-411d-ae3b-e6f8b9321f9f/scratchpad/ 2>&1 *)"
+    ],
+    "additionalDirectories": [
+      "/Users/sum/develop/gemstonecurator/src/lib/llm",
+      "/Users/sum/develop/gemstonecurator/src/app/api/v1/recommendations/[id]",
+      "/Users/sum/develop/gemstonecurator"
+    ]
+  }
+}

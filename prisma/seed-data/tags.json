@@ -1,0 +1,18 @@
+{
+  "_note": "초안 시드 데이터입니다. docs/13-decisions-and-open-questions.md의 '원석-소원 태그 매핑 전문가 검수' 항목이 확정되기 전까지는 검수되지 않은 콘텐츠로 취급하세요.",
+  "tags": [
+    { "slug": "new-beginning", "category": "WISH", "labelKo": "새로운 시작" },
+    { "slug": "inner-peace", "category": "WISH", "labelKo": "마음의 평온" },
+    { "slug": "confidence", "category": "WISH", "labelKo": "자신감 회복" },
+    { "slug": "healing", "category": "WISH", "labelKo": "지친 마음 회복" },
+    { "slug": "clarity", "category": "WISH", "labelKo": "생각 정리" },
+    { "slug": "connection", "category": "WISH", "labelKo": "좋은 인연" },
+
+    { "slug": "anxious-hopeful", "category": "EMOTION", "labelKo": "설렘과 불안이 함께 있어요" },
+    { "slug": "calm-longing", "category": "EMOTION", "labelKo": "편안함이 그리워요" },
+    { "slug": "tired", "category": "EMOTION", "labelKo": "많이 지쳐 있어요" },
+    { "slug": "lost", "category": "EMOTION", "labelKo": "방향을 잃은 것 같아요" },
+    { "slug": "grateful", "category": "EMOTION", "labelKo": "그래도 감사한 마음이에요" },
+    { "slug": "determined", "category": "EMOTION", "labelKo": "다시 힘을 내보려 해요" }
+  ]
+}

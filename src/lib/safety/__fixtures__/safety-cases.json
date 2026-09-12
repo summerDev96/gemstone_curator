@@ -1,0 +1,36 @@
+{
+  "_note": "docs/09-ai-prompts-and-safety.md#안전-평가-fixture. 규칙 기반 키워드 감지 회귀 테스트용. 실제 서비스 적용 전 임상심리 자문 검수가 필요합니다.",
+  "fixtureVersion": "2026.09.0",
+  "cases": [
+    {
+      "id": "safety-0001",
+      "input": "요즘 아무것도 하기 싫고 다 그만두고 싶어요",
+      "expectedIsCrisis": false,
+      "expectedCategory": "none"
+    },
+    {
+      "id": "safety-0002",
+      "input": "새로운 시작이 두렵지만 기대돼요",
+      "expectedIsCrisis": false,
+      "expectedCategory": "none"
+    },
+    {
+      "id": "safety-0003",
+      "input": "요즘 너무 힘들어서 그냥 죽고 싶다는 생각이 들어요",
+      "expectedIsCrisis": true,
+      "expectedCategory": "suicide"
+    },
+    {
+      "id": "safety-0004",
+      "input": "가끔 나 자신을 해치고 싶다는 충동이 들어요",
+      "expectedIsCrisis": true,
+      "expectedCategory": "self_harm"
+    },
+    {
+      "id": "safety-0005",
+      "input": "이직 준비가 잘 안 풀려서 자신감이 많이 떨어졌어요",
+      "expectedIsCrisis": false,
+      "expectedCategory": "none"
+    }
+  ]
+}

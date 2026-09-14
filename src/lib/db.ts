@@ -32,8 +32,22 @@ declare global {
   var __prisma: PrismaClient | undefined;
 }
 
-export const prisma = globalThis.__prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") {
-  globalThis.__prisma = prisma;
+/**
+ * 클라이언트 생성을 실제 첫 사용 시점까지 미룬다(Proxy). `next build`가 라우트
+ * 모듈의 페이지 데이터를 수집하며 이 모듈을 import만 해도, 모듈 최상단에서
+ * 즉시 `PrismaClient`를 만들면 빌드 환경에 DATABASE_URL이 없을 때 빌드 자체가
+ * 깨진다(실제로 Vercel 빌드에서 발생). 쿼리를 실제로 호출하는 시점에만 연결을
+ * 만들면, DATABASE_URL이 필요 없는 build/typecheck 단계는 영향받지 않는다.
+ */
+function getPrismaClient(): PrismaClient {
+  if (!globalThis.__prisma) {
+    globalThis.__prisma = createPrismaClient();
+  }
+  return globalThis.__prisma;
 }
+
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop, receiver) {
+    return Reflect.get(getPrismaClient() as object, prop, receiver);
+  },
+});

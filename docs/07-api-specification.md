@@ -150,6 +150,41 @@ const RecommendationBasicRequestSchema = z.object({
 
 ---
 
+## POST /recommendations/desire
+
+- **목적**: "내 염원으로 추천받기"(S01-D) — 생년월일 없이, 사용자가 고른 염원 하나로 원석 후보를 조회한다. `Recommendation`을 생성하지 않는 상태 없는(stateless) 조회다.
+- **인증**: 세션 토큰 필요(개인화 데이터는 만들지 않지만, 다른 엔드포인트와 동일하게 비회원 세션 체계를 통일해 사용).
+- **Headers**: `Authorization: Bearer <sessionToken>`
+- **Body**:
+```ts
+{
+  desire: "love" | "romance" | "health" | "vitality" | "study"
+        | "healing" | "relationships" | "protection" | "defense";
+}
+```
+- **처리 로직**: `desire` → 내부 목적 그룹(5종: `love_romance`, `health_vitality`, `study`, `healing_relationships`, `protection_defense`) → 사람이 정리한 오행×목적 매핑 표에서 해당 그룹에 속한 원석 slug 목록 조회 → 기존 `Stone` 테이블에서 실제 데이터 조회(없는 slug는 조용히 제외). 결정론적 규칙 엔진(`recommend()`)은 사용하지 않는다 — 사주 입력이 없어 오행 신호가 없기 때문.
+- **요청 예시**
+```json
+{ "desire": "love" }
+```
+- **성공 응답 예시 (200)**
+```json
+{
+  "stones": [
+    { "id": "...", "slug": "turquoise", "nameKo": "터키석", "nameEn": "Turquoise", "colorHex": "#3FB8AF", "imageUrl": "/images/jewelry/turquoise.png", "summary": "..." },
+    { "id": "...", "slug": "amazonite", "nameKo": "아마조나이트", "nameEn": "Amazonite", "colorHex": "...", "imageUrl": "...", "summary": "..." }
+  ]
+}
+```
+- **오류 응답**: `VALIDATION_ERROR`(`desire`가 9개 값 중 하나가 아님), `UNAUTHORIZED`.
+- **Rate limit**: 세션당 분당 10회.
+- **Idempotency**: 멱등(같은 `desire`는 항상 같은 목록을 반환, DB에 아무것도 쓰지 않는다).
+- **매핑 데이터 출처**: [src/lib/desire/mapping.ts](src/lib/desire/mapping.ts) — 원안(오행×목적 표)에 있던 원석 중 실제 23종 카탈로그에 없는 것(20여 종)은 임의로 대체하지 않고 제외했다. 매핑에 후보가 없는 조합은 빈 배열을 반환하며, 현재 9개 염원은 모두 최소 1개 이상의 후보를 가진다([13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조).
+- **관련 화면**: S01-D.
+- **테스트 케이스**: `src/lib/desire/mapping.test.ts`, `src/app/api/v1/recommendations/desire/route.test.ts`, `e2e/entry-mode-flow.spec.ts`.
+
+---
+
 ## GET /recommendations/{id}
 
 - **목적**: 기본 추천 결과(및 확장된 오행/관계 결과 요약)를 조회한다.

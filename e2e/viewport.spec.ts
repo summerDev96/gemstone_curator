@@ -10,7 +10,7 @@ const VIEWPORTS = [
   { name: "1440px (데스크톱)", width: 1440, height: 900 },
 ];
 
-const PATHS = ["/", "/wish", "/heart"];
+const PATHS = ["/", "/wish", "/heart", "/desire"];
 
 for (const viewport of VIEWPORTS) {
   for (const path of PATHS) {

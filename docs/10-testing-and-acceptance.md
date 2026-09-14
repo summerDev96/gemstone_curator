@@ -68,6 +68,7 @@ Playwright 기준, 실제 브라우저(모바일 뷰포트 우선)에서 수행�
 | E2E-07 | 공유 결과(S13)에 민감정보가 포함되지 않는다 |
 | E2E-08 | 데이터 삭제 후 결과와 공유 링크에 접근할 수 없다 |
 | E2E-09 | 320px, 390px, 768px, 1440px에서 가로 스크롤이 없다 |
+| E2E-10 | 메인 화면의 내 염원/내 사주/관계의 사주 3가지 버튼이 각각 올바른 화면으로 분기한다(`e2e/entry-mode-flow.spec.ts`) |
 
 ## 속성 기반 테스트
 
@@ -182,6 +183,8 @@ pnpm lint              # ESLint
 | FR-REL-001~003 | S09~S12 | `POST /recommendations/{id}/relationship` | E2E-06, API-06 |
 | FR-REL-004 | S12 | 동일 | E2E-06 |
 | ~~FR-REL-005~~/~~FR-REL-006~~ | - | - | 제거됨(docs/13 참조) |
+| FR-DESIRE-001 | S01 | - | E2E-10 |
+| FR-DESIRE-002~003 | S01-D | `POST /recommendations/desire` | E2E-10, `mapping.test.ts`, `desire/route.test.ts` |
 | NFR-SEC-001 | 전체 | 전체 | SEC-01 |
 | NFR-SEC-002 | S07, S10 | `POST .../five-elements`, `POST .../relationship` | SEC-02 |
 | NFR-SEC-003 | S01, S13, S14 | `POST /sessions`, `POST .../share-links` | SEC-03 |

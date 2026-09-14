@@ -106,6 +106,16 @@
 
 Phase 3 후반 확장 후보(원석 선물/커머스 연동, AI 수호 캐릭터 생성)는 본 PRD의 요구사항 ID로 확정하지 않으며 [13-decisions-and-open-questions.md](13-decisions-and-open-questions.md)의 미해결 질문으로 관리한다.
 
+### Phase 3 확장 — 염원 기반 추천
+
+| ID | 설명 | 우선순위 | Phase | 관련 화면 | 관련 API | 관련 테스트 |
+|---|---|---|---|---|---|---|
+| FR-DESIRE-001 | 메인 화면은 "내 염원"/"내 사주"/"관계의 사주" 3가지 추천 방식으로 분기한다 | P1 | 3 | S01 | - | E2E-10 |
+| FR-DESIRE-002 | 사용자는 생년월일 없이 9개 염원(사랑/연애/건강/활력/학업/힐링/대인관계/수호/방어) 중 하나를 선택해 원석을 추천받을 수 있다 | P1 | 3 | S01-D | `POST /recommendations/desire` | E2E-10 |
+| FR-DESIRE-003 | 염원 기반 추천은 사람이 정리한 오행×목적 매핑 표를 그대로 조회하며, 매핑에 없는 원석을 임의로 추가하지 않는다 | P0 | 3 | S01-D | 동일 | `mapping.test.ts` |
+
+**실제 구현 참고**: "내 사주"/"관계의 사주" 버튼은 기존 오행/관계 화면(S06, S09)을 그대로 재사용하되, 소원·감정 선택 화면(S02, S03)을 사용자에게 노출하지 않는다 — 내부적으로 기본값 소원/감정을 채운 `POST /recommendations/basic`(기존 API, 무변경)을 조용히 호출해 진입한다([13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조).
+
 ## 비기능 요구사항 (Non-Functional Requirements)
 
 | ID | 설명 | 우선순위 | Phase | 관련 테스트 |

@@ -6,6 +6,12 @@
 export const ANALYTICS_EVENT_ALLOWLIST = [
   "landing_view",
   "landing_cta_click",
+  "landing_desire_click",
+  "landing_saju_click",
+  "landing_relationship_click",
+  "desire_view",
+  "desire_selected",
+  "desire_result_view",
   "wish_view",
   "wish_primary_selected",
   "wish_secondary_selected",

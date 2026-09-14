@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { LandingCta } from "@/components/LandingCta";
+import { EntryModeButtons } from "@/components/EntryModeButtons";
 import { TrackView } from "@/components/TrackView";
 
 export default function LandingPage() {
@@ -12,15 +12,10 @@ export default function LandingPage() {
       </header>
 
       <section className="flex flex-1 flex-col items-center justify-center gap-6 py-8 text-center">
-        {/*
-          라리마(Larimar) 원석 사진. 출처: Wikimedia Commons, 촬영자 Vassil,
-          퍼블릭 도메인(저작권자가 조건 없이 공개) — 상업적 사용·저작자 표시 모두 불필요.
-          https://commons.wikimedia.org/wiki/File:Larimar.jpg
-        */}
         <div className="h-40 w-40 overflow-hidden rounded-full bg-accent-primary/10">
           <Image
-            src="/images/larimar.jpg"
-            alt="라리마 원석"
+            src="/images/jewelry/chalcedony.png"
+            alt="칼세도니 원석"
             width={320}
             height={320}
             className="h-full w-full object-cover"
@@ -40,7 +35,7 @@ export default function LandingPage() {
       </section>
 
       <div className="pb-4">
-        <LandingCta />
+        <EntryModeButtons />
       </div>
 
       <section aria-label="서비스 소개" className="py-8">

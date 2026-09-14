@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { GemIcon } from "@/components/ui/GemIcon";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { apiFetch } from "@/lib/client/session";
 import { getWishFlowState } from "@/lib/client/wishFlowStore";
@@ -98,8 +99,10 @@ export default function ResultNewPage() {
     >
       <div
         aria-hidden="true"
-        className="h-16 w-16 animate-pulse rounded-full bg-accent-primary/20 motion-reduce:animate-none"
-      />
+        className="flex h-16 w-16 items-center justify-center animate-pulse rounded-full bg-accent-primary/20 motion-reduce:animate-none"
+      >
+        <GemIcon className="h-8 w-8 text-accent-primary" />
+      </div>
       <p className="text-base text-text-secondary">
         당신에게 맞는 원석을 찾고 있어요...
       </p>

@@ -164,6 +164,10 @@ export function FiveElementsResultView({ id }: { id: string }) {
       </div>
 
       <div className="flex flex-col gap-3 pb-8">
+        <ShareButton recommendationId={id} scope="five-elements" />
+        <PrimaryButton variant="secondary" onClick={() => router.push("/")}>
+          처음으로
+        </PrimaryButton>
         <p className="text-center text-xs text-text-secondary">
           이 결과는 이 브라우저의{" "}
           <Link href="/library" className="text-accent-primary underline">
@@ -171,10 +175,6 @@ export function FiveElementsResultView({ id }: { id: string }) {
           </Link>
           에서 다시 볼 수 있어요.
         </p>
-        <ShareButton recommendationId={id} scope="five-elements" />
-        <PrimaryButton variant="secondary" onClick={() => router.push("/")}>
-          처음으로
-        </PrimaryButton>
       </div>
     </main>
   );

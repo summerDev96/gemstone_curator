@@ -44,19 +44,16 @@ export function FeedbackRating({ recommendationId }: { recommendationId: string 
             aria-label={`${value}점`}
             onClick={() => submit(value)}
             disabled={submitted}
-            className={`flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border text-lg disabled:cursor-not-allowed ${
+            className={`flex min-h-[44px] min-w-[44px] items-center justify-center text-2xl disabled:cursor-not-allowed ${
               rating !== null && value <= rating
-                ? "border-accent-primary bg-accent-primary/10 text-accent-primary"
-                : "border-border-subtle text-text-secondary"
+                ? "text-accent-primary"
+                : "text-text-secondary"
             }`}
           >
             ★
           </button>
         ))}
       </div>
-      {submitted && (
-        <p className="pt-2 text-sm text-success">소중한 의견 감사해요.</p>
-      )}
       {error && (
         <p role="alert" className="pt-2 text-sm text-danger">
           {error}

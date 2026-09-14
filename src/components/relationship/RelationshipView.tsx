@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { GemIcon } from "@/components/ui/GemIcon";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { StepHeader } from "@/components/ui/StepHeader";
 import { ShareButton } from "@/components/result/ShareButton";
@@ -289,8 +290,10 @@ export function RelationshipView({ id }: { id: string }) {
       >
         <div
           aria-hidden="true"
-          className="h-16 w-16 animate-pulse rounded-full bg-accent-primary/20 motion-reduce:animate-none"
-        />
+          className="flex h-16 w-16 items-center justify-center animate-pulse rounded-full bg-accent-primary/20 motion-reduce:animate-none"
+        >
+          <GemIcon className="h-8 w-8 text-accent-primary" />
+        </div>
         <p className="text-base text-text-secondary">우리의 원석을 찾고 있어요...</p>
       </main>
     );
@@ -359,13 +362,6 @@ export function RelationshipView({ id }: { id: string }) {
       </div>
 
       <div className="flex flex-col gap-3 pb-8 pt-6">
-        <p className="text-center text-xs text-text-secondary">
-          이 결과는 이 브라우저의{" "}
-          <Link href="/library" className="text-accent-primary underline">
-            보관함
-          </Link>
-          에서 다시 볼 수 있어요.
-        </p>
         <ShareButton
           recommendationId={id}
           scope="relationship"
@@ -374,6 +370,13 @@ export function RelationshipView({ id }: { id: string }) {
         <PrimaryButton variant="secondary" onClick={() => router.push("/")}>
           처음으로
         </PrimaryButton>
+        <p className="text-center text-xs text-text-secondary">
+          이 결과는 이 브라우저의{" "}
+          <Link href="/library" className="text-accent-primary underline">
+            보관함
+          </Link>
+          에서 다시 볼 수 있어요.
+        </p>
       </div>
     </main>
   );

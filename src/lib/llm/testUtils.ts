@@ -7,6 +7,11 @@ const DEFAULT_COPY = {
   microAction: "행동1",
 };
 
+const DEFAULT_RELATIONSHIP_COPY = {
+  conversationPrompt: "요즘 서로에게 가장 고마웠던 순간은 언제였나요?",
+  microAction: "이번 주 안에 서로에게 짧은 안부를 전해보세요.",
+};
+
 /**
  * 테스트 전용 LLMProvider 목. 안전 분류 요청은 항상 isCrisis=false를 반환하고,
  * 그 외(카피 생성) 요청은 스키마를 만족하는 고정 카피를 반환한다.
@@ -19,6 +24,13 @@ export function createMockLLMProvider(): LLMProvider {
       if (params.schemaName === "safety_classification") {
         return {
           data: { isCrisis: false, category: "none", confidence: 0.1 } as T,
+          modelName: "fake-model",
+          rawFinishReason: "stop",
+        };
+      }
+      if (params.schemaName === "relationship_copy") {
+        return {
+          data: DEFAULT_RELATIONSHIP_COPY as T,
           modelName: "fake-model",
           rawFinishReason: "stop",
         };

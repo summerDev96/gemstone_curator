@@ -60,6 +60,15 @@ export async function POST(
     );
   }
 
+  if (parsed.data.scope === "relationship") {
+    const relationshipAnalysis = await prisma.relationshipAnalysis.findUnique({
+      where: { id: parsed.data.relationshipAnalysisId },
+    });
+    if (!relationshipAnalysis || relationshipAnalysis.recommendationId !== recommendation.id) {
+      return apiError("NOT_FOUND", "관계 원석 결과를 찾을 수 없습니다.");
+    }
+  }
+
   const token = generateToken("shr");
   const tokenHash = hashToken(token);
   const expiresAt = new Date(Date.now() + SHARE_LINK_TTL_MS);
@@ -67,6 +76,8 @@ export async function POST(
   await prisma.shareLink.create({
     data: {
       recommendationId: recommendation.id,
+      relationshipAnalysisId:
+        parsed.data.scope === "relationship" ? parsed.data.relationshipAnalysisId : null,
       scope: parsed.data.scope,
       tokenHash,
       expiresAt,

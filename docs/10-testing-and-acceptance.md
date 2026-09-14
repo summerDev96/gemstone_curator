@@ -34,6 +34,7 @@ flowchart TD
 | Zod 스키마 | [07-api-specification.md](07-api-specification.md)의 각 요청 스키마 boundary 값(300자, 20자, 1~5점 등) |
 | 오행 계산 유틸 | 양력/음력 변환, 출생시간 미상 처리(`추가 검증 필요`: 계산 방식 확정 후 상세화) |
 | 암호화 유틸 | envelope encryption/decryption 왕복 검증 |
+| 정적 이미지 자산(ASSET-01) | 활성 원석 23종의 seed URL, PNG 파일 존재, 정사각형 크기, slug 일치를 검증한다 |
 
 ## 통합 테스트
 
@@ -63,7 +64,7 @@ Playwright 기준, 실제 브라우저(모바일 뷰포트 우선)에서 수행�
 | E2E-03 | LLM timeout 상황에서도 fallback 결과로 S05가 완성된다 |
 | E2E-04 | 위기 표현 입력 시 일반 결과 대신 안전 안내가 표시된다 |
 | E2E-05 | 출생시간 미상으로 오행 분석(S06~S08)을 완료한다 |
-| E2E-06 | 상대 생년월일 없이 관계 추천(S09~S12)을 완료한다 |
+| E2E-06 | 나와 상대방의 생년월일시를 모두 입력해 관계 추천(S09~S12)을 완료한다(`e2e/relationship-flow.spec.ts`, 실제 구현 참고) |
 | E2E-07 | 공유 결과(S13)에 민감정보가 포함되지 않는다 |
 | E2E-08 | 데이터 삭제 후 결과와 공유 링크에 접근할 수 없다 |
 | E2E-09 | 320px, 390px, 768px, 1440px에서 가로 스크롤이 없다 |
@@ -171,6 +172,7 @@ pnpm lint              # ESLint
 | FR-BASIC-013 | S01~S05 | `POST /sessions` | E2E-01, API-01 |
 | FR-BASIC-014 | 전체 | 전체 | 개인정보 비노출 테스트 |
 | FR-BASIC-015 | S03, S05 | `POST /recommendations/basic` | E2E-04, 프롬프트 회귀 테스트 |
+| FR-BASIC-016 | S05 | `POST /recommendations/basic`, `GET /recommendations/{id}` | ASSET-01, E2E-01 |
 | FR-FIVE-001~003 | S06, S07 | `POST /recommendations/{id}/five-elements` | E2E-05, API-05 |
 | FR-FIVE-004 | S08 | 동일 | E2E-05, API-05 |
 | FR-FIVE-005 | S14 | `추가 검증 필요` | E2E-08 |
@@ -179,8 +181,7 @@ pnpm lint              # ESLint
 | FR-FIVE-008 | S14 | `DELETE /me/data` | E2E-08, API-12 |
 | FR-REL-001~003 | S09~S12 | `POST /recommendations/{id}/relationship` | E2E-06, API-06 |
 | FR-REL-004 | S12 | 동일 | E2E-06 |
-| FR-REL-005 | S12 | 동일 | E2E-06 |
-| FR-REL-006 | S12 | `추가 검증 필요` | E2E-06(단방향 범위까지) |
+| ~~FR-REL-005~~/~~FR-REL-006~~ | - | - | 제거됨(docs/13 참조) |
 | NFR-SEC-001 | 전체 | 전체 | SEC-01 |
 | NFR-SEC-002 | S07, S10 | `POST .../five-elements`, `POST .../relationship` | SEC-02 |
 | NFR-SEC-003 | S01, S13, S14 | `POST /sessions`, `POST .../share-links` | SEC-03 |

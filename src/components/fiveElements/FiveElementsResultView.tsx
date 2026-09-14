@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { StepHeader } from "@/components/ui/StepHeader";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
-import { ExpansionCtaCard } from "@/components/result/ExpansionCtaCard";
+import { NavigableCtaCard } from "@/components/result/NavigableCtaCard";
 import { ShareButton } from "@/components/result/ShareButton";
+import { StoneAvatar } from "@/components/ui/StoneAvatar";
 import { TrackView } from "@/components/TrackView";
 import { apiFetch } from "@/lib/client/session";
 
@@ -26,6 +27,7 @@ interface FiveElementsDetail {
     nameKo: string;
     nameEn: string;
     colorHex: string;
+    imageUrl: string | null;
   };
   heartSummary: string;
   rationale: string;
@@ -80,12 +82,7 @@ export function FiveElementsResultView({ id }: { id: string }) {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4">
       <TrackView event="five_elements_result_view" />
-      <StepHeader
-        step={3}
-        totalSteps={3}
-        onBack={() => router.push(`/result/${id}`)}
-        rightSlot={<ShareButton recommendationId={id} scope="five-elements" />}
-      />
+      <StepHeader step={3} totalSteps={3} onBack={() => router.push(`/result/${id}`)} />
 
       <section className="py-4">
         <h2 className="pb-2 text-sm font-medium text-text-secondary">오행 균형</h2>
@@ -114,16 +111,12 @@ export function FiveElementsResultView({ id }: { id: string }) {
       </p>
 
       <section className="flex flex-col items-center gap-3 py-4 text-center">
-        <div
-          aria-hidden="true"
-          className="flex h-28 w-28 items-center justify-center rounded-full"
-          style={{ backgroundColor: `${fe.integratedStone.colorHex}33` }}
-        >
-          <div
-            className="h-16 w-16 rounded-full"
-            style={{ backgroundColor: fe.integratedStone.colorHex }}
-          />
-        </div>
+        <StoneAvatar
+          imageUrl={fe.integratedStone.imageUrl}
+          colorHex={fe.integratedStone.colorHex}
+          alt={fe.integratedStone.nameKo}
+          size={112}
+        />
         <h1 className="text-lg font-semibold text-text-primary">
           {fe.integratedStone.nameKo}
           <span className="pl-2 text-sm font-normal text-text-secondary">
@@ -162,10 +155,11 @@ export function FiveElementsResultView({ id }: { id: string }) {
       </div>
 
       <div className="flex flex-col gap-3 py-6">
-        <ExpansionCtaCard
+        <NavigableCtaCard
           title="관계 원석 알아보기"
           description="소중한 인연과의 원석도 함께 알아볼 수 있어요."
           event="relationship_cta_click"
+          href={`/result/${id}/relationship`}
         />
       </div>
 
@@ -177,6 +171,7 @@ export function FiveElementsResultView({ id }: { id: string }) {
           </Link>
           에서 다시 볼 수 있어요.
         </p>
+        <ShareButton recommendationId={id} scope="five-elements" />
         <PrimaryButton variant="secondary" onClick={() => router.push("/")}>
           처음으로
         </PrimaryButton>

@@ -27,6 +27,15 @@ enum CalendarType {
 
 enum ConsentType {
   FIVE_ELEMENTS_BIRTH_INFO
+  RELATIONSHIP_PARTNER_INFO
+}
+
+enum RelationshipType {
+  FAMILY
+  FRIEND
+  ROMANTIC
+  COLLEAGUE
+  OTHER
 }
 
 model AnonymousSession {
@@ -54,9 +63,12 @@ model Stone {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  stoneTags           StoneTag[]
-  recommendations     Recommendation[]
-  fiveElementProfiles FiveElementProfile[]
+  stoneTags                 StoneTag[]
+  recommendations           Recommendation[]
+  fiveElementProfiles       FiveElementProfile[]
+  myStoneRelationships      RelationshipAnalysis[] @relation("MyStone")
+  partnerStoneRelationships RelationshipAnalysis[] @relation("PartnerStone")
+  weStoneRelationships      RelationshipAnalysis[] @relation("WeStone")
 }
 
 model Tag {
@@ -66,10 +78,11 @@ model Tag {
   labelKo   String
   createdAt DateTime    @default(now())
 
-  stoneTags             StoneTag[]
-  primaryWishSessions   WishSession[] @relation("PrimaryWish")
-  secondaryWishSessions WishSession[] @relation("SecondaryWish")
-  heartWishSessions     WishSession[] @relation("HeartTag")
+  stoneTags                StoneTag[]
+  primaryWishSessions      WishSession[]          @relation("PrimaryWish")
+  secondaryWishSessions    WishSession[]          @relation("SecondaryWish")
+  heartWishSessions        WishSession[]          @relation("HeartTag")
+  relationshipGoalAnalyses RelationshipAnalysis[] @relation("RelationshipGoal")
 
   @@index([category])
 }
@@ -122,11 +135,12 @@ model Recommendation {
   generatedAt          DateTime
   createdAt            DateTime @default(now())
 
-  wishSession        WishSession         @relation(fields: [wishSessionId], references: [id], onDelete: Cascade)
-  stone              Stone               @relation(fields: [stoneId], references: [id])
-  fiveElementProfile FiveElementProfile? @relation(fields: [fiveElementProfileId], references: [id])
-  feedback           Feedback?
-  shareLinks         ShareLink[]
+  wishSession          WishSession            @relation(fields: [wishSessionId], references: [id], onDelete: Cascade)
+  stone                Stone                  @relation(fields: [stoneId], references: [id])
+  fiveElementProfile   FiveElementProfile?    @relation(fields: [fiveElementProfileId], references: [id])
+  feedback             Feedback?
+  shareLinks           ShareLink[]
+  relationshipAnalyses RelationshipAnalysis[]
 
   @@index([stoneId])
   @@index([createdAt])
@@ -168,32 +182,69 @@ model FiveElementProfile {
   computedElement    FiveElement
   balanceJson        Json
   integratedStoneId  String?      @db.Uuid
-  heartSummary       String
-  rationale          String
-  comfortLines       Json
-  microAction        String
+  /**
+   * 본인 오행 결과(S08)에서만 채워진다. 관계 분석 중 상대방 오행처럼 화면에
+   * 노출되는 별도 카피 없이 내부적으로만 쓰이는 프로필은 null로 둔다
+   * (불필요한 LLM 호출을 피하기 위함, docs/11 실제 구현 참고 참조).
+   */
+  heartSummary       String?
+  rationale          String?
+  comfortLines       Json?
+  microAction        String?
   usedFallback       Boolean      @default(false)
-  promptVersion      String
-  modelName          String
+  promptVersion      String?
+  modelName          String?
   consentRecordId    String       @db.Uuid
   createdAt          DateTime     @default(now())
 
-  integratedStone Stone?          @relation(fields: [integratedStoneId], references: [id])
-  consentRecord   ConsentRecord   @relation(fields: [consentRecordId], references: [id])
-  recommendation  Recommendation?
+  integratedStone   Stone?                 @relation(fields: [integratedStoneId], references: [id])
+  consentRecord     ConsentRecord          @relation(fields: [consentRecordId], references: [id])
+  recommendation    Recommendation?
+  partnerOfAnalyses RelationshipAnalysis[] @relation("PartnerFiveElementProfile")
+}
+
+model RelationshipAnalysis {
+  id                          String           @id @default(uuid()) @db.Uuid
+  recommendationId            String           @db.Uuid
+  relationshipType            RelationshipType
+  relationshipGoalTagId       String           @db.Uuid
+  partnerNicknameEncrypted    Bytes
+  partnerBirthProvided        Boolean          @default(false)
+  partnerFiveElementProfileId String?          @db.Uuid
+  myStoneId                   String           @db.Uuid
+  partnerStoneId              String?          @db.Uuid
+  weStoneId                   String           @db.Uuid
+  conversationPrompt          String
+  microAction                 String
+  usedFallback                Boolean          @default(false)
+  promptVersion               String
+  modelName                   String
+  createdAt                   DateTime         @default(now())
+
+  recommendation            Recommendation      @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+  relationshipGoalTag       Tag                 @relation("RelationshipGoal", fields: [relationshipGoalTagId], references: [id])
+  partnerFiveElementProfile FiveElementProfile? @relation("PartnerFiveElementProfile", fields: [partnerFiveElementProfileId], references: [id])
+  myStone                   Stone               @relation("MyStone", fields: [myStoneId], references: [id])
+  partnerStone              Stone?              @relation("PartnerStone", fields: [partnerStoneId], references: [id])
+  weStone                   Stone               @relation("WeStone", fields: [weStoneId], references: [id])
+  shareLinks                ShareLink[]
+
+  @@index([recommendationId])
 }
 
 model ShareLink {
-  id               String    @id @default(uuid()) @db.Uuid
-  recommendationId String    @db.Uuid
-  scope            String
-  tokenHash        String    @unique
-  expiresAt        DateTime
-  revokedAt        DateTime?
-  viewCount        Int       @default(0)
-  createdAt        DateTime  @default(now())
+  id                     String    @id @default(uuid()) @db.Uuid
+  recommendationId       String    @db.Uuid
+  relationshipAnalysisId String?   @db.Uuid
+  scope                  String
+  tokenHash              String    @unique
+  expiresAt              DateTime
+  revokedAt              DateTime?
+  viewCount              Int       @default(0)
+  createdAt              DateTime  @default(now())
 
-  recommendation Recommendation @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+  recommendation       Recommendation        @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+  relationshipAnalysis RelationshipAnalysis? @relation(fields: [relationshipAnalysisId], references: [id], onDelete: Cascade)
 
   @@index([expiresAt])
 }

@@ -11,8 +11,6 @@ import { resolveSession } from "@/lib/session";
 import { RecommendationBasicRequestSchema } from "@/lib/validation/recommendations";
 import { zodToFieldErrors } from "@/lib/validation/zodToFieldErrors";
 
-const RECENT_STONE_WINDOW = 3;
-
 export async function POST(request: Request) {
   const llm = getLLMProvider();
   const session = await resolveSession(request);
@@ -75,15 +73,9 @@ export async function POST(request: Request) {
     return apiError("NOT_FOUND", "존재하지 않는 태그입니다.");
   }
 
-  const [stones, stoneTags, recentRecommendations] = await Promise.all([
+  const [stones, stoneTags] = await Promise.all([
     prisma.stone.findMany({ where: { isActive: true } }),
     prisma.stoneTag.findMany(),
-    prisma.recommendation.findMany({
-      where: { wishSession: { anonymousSessionId: session.id } },
-      orderBy: { createdAt: "desc" },
-      take: RECENT_STONE_WINDOW,
-      select: { stoneId: true },
-    }),
   ]);
 
   const engineResult = recommend(
@@ -94,7 +86,6 @@ export async function POST(request: Request) {
         secondaryWishTagId: body.secondaryWishTagId,
         heartTagId: body.heartTagId,
       },
-      recentStoneIds: recentRecommendations.map((r) => r.stoneId),
     },
     stones.map((s) => ({ id: s.id, slug: s.slug })),
     stoneTags.map((st) => ({
@@ -140,7 +131,7 @@ export async function POST(request: Request) {
       wishSessionId: wishSession.id,
       stoneId: stone.id,
       rulesetVersion: engineResult.rulesetVersion,
-      score: engineResult.finalScore,
+      score: engineResult.score,
       heartSummary: generated.copy.heartSummary,
       rationale: generated.copy.rationale,
       comfortLines: generated.copy.comfortLines,

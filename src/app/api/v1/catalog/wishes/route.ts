@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   }
 
   const tags = await prisma.tag.findMany({
-    where: { category: { in: ["WISH", "EMOTION"] } },
+    where: { category: { in: ["WISH", "EMOTION", "RELATIONSHIP_GOAL"] } },
     orderBy: { createdAt: "asc" },
   });
 
@@ -20,6 +20,9 @@ export async function GET(request: Request) {
   const emotions = tags
     .filter((t) => t.category === "EMOTION")
     .map((t) => ({ id: t.id, slug: t.slug, labelKo: t.labelKo }));
+  const relationshipGoals = tags
+    .filter((t) => t.category === "RELATIONSHIP_GOAL")
+    .map((t) => ({ id: t.id, slug: t.slug, labelKo: t.labelKo }));
 
-  return NextResponse.json({ wishes, emotions });
+  return NextResponse.json({ wishes, emotions, relationshipGoals });
 }

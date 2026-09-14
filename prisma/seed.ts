@@ -10,6 +10,7 @@ import {
   StonesFileSchema,
   StoneTagsFileSchema,
   FallbackCopyFileSchema,
+  RelationshipFallbackCopyFileSchema,
 } from "./seedSchemas";
 
 function readJson(fileName: string): unknown {
@@ -23,6 +24,9 @@ async function main() {
   const stoneTagsFile = StoneTagsFileSchema.parse(readJson("stone-tags.json"));
   const fallbackFile = FallbackCopyFileSchema.parse(
     readJson("fallback-copy.json"),
+  );
+  const relationshipFallbackFile = RelationshipFallbackCopyFileSchema.parse(
+    readJson("relationship-fallback-copy.json"),
   );
 
   const stoneSlugs = new Set(stonesFile.stones.map((s) => s.slug));
@@ -48,6 +52,14 @@ async function main() {
       `fallback 카피가 없는 원석이 있습니다: ${missingFallback.map((s) => s.slug).join(", ")}`,
     );
   }
+  const missingRelationshipFallback = stonesFile.stones.filter(
+    (s) => !relationshipFallbackFile.fallbackCopy.some((f) => f.stoneSlug === s.slug),
+  );
+  if (missingRelationshipFallback.length > 0) {
+    throw new Error(
+      `관계 fallback 카피가 없는 원석이 있습니다: ${missingRelationshipFallback.map((s) => s.slug).join(", ")}`,
+    );
+  }
 
   for (const tag of tagsFile.tags) {
     await prisma.tag.upsert({
@@ -60,10 +72,18 @@ async function main() {
   for (const stone of stonesFile.stones) {
     await prisma.stone.upsert({
       where: { slug: stone.slug },
-      update: stone,
+      update: { ...stone, isActive: true },
       create: stone,
     });
   }
+
+  // stones.json에서 빠진(더 이상 노출하지 않기로 한) 원석은 삭제 대신 비활성화한다.
+  // 이미 생성된 Recommendation/RelationshipAnalysis가 참조 중일 수 있어 FK 삭제가
+  // 불가능하고, isActive 필터는 이미 추천 조회 경로에서 사용 중이다.
+  const deactivated = await prisma.stone.updateMany({
+    where: { slug: { notIn: Array.from(stoneSlugs) }, isActive: true },
+    data: { isActive: false },
+  });
 
   const allTags = await prisma.tag.findMany();
   const allStones = await prisma.stone.findMany();
@@ -83,7 +103,7 @@ async function main() {
   }
 
   console.log(
-    `시드 완료: 태그 ${allTags.length}개, 원석 ${allStones.length}개, 원석-태그 매핑 ${stoneTagsFile.stoneTags.length}개`,
+    `시드 완료: 태그 ${allTags.length}개, 원석 ${stonesFile.stones.length}개(비활성화 ${deactivated.count}개), 원석-태그 매핑 ${stoneTagsFile.stoneTags.length}개`,
   );
 }
 

@@ -247,7 +247,7 @@ const FiveElementsRequestSchema = z.object({
 
 ## POST /recommendations/{id}/relationship
 
-- **목적**: 관계 유형·목표·상대방 정보를 받아 관계 원석 결과를 생성한다.
+- **목적**: 관계 유형·목표·상대방 정보를 받아 관계 원석 결과를 생성한다. 나와 상대방의 사주를 함께 비교하는 기능이므로 **두 사람의 생년월일시가 모두 필요**하다(요청자가 이미 오행 분석(S06~S08)을 마쳤다면 나의 생년월일시는 그 결과를 재사용하고 이 요청에서는 생략 가능).
 - **인증·소유권**: `Recommendation` 소유자만 호출 가능.
 - **Headers**: `Authorization: Bearer <sessionToken|authToken>`
 - **Path**: `id` (uuid, Recommendation ID)
@@ -257,9 +257,19 @@ const FiveElementsRequestSchema = z.object({
   relationshipType: "FAMILY" | "FRIEND" | "ROMANTIC" | "COLLEAGUE" | "OTHER";
   relationshipGoalTagId: string; // uuid
   partnerNickname: string; // 1~20자
-  partnerBirthInfo?: {
+  myBirthInfo?: {
+    // 이미 오행 분석을 마친 Recommendation이면 생략 가능. 아니라면 필수.
     calendarType: "SOLAR" | "LUNAR";
     birthDate: string;
+    isLeapMonth?: boolean;
+    birthTimeUnknown: boolean;
+    birthTime?: string;
+  };
+  partnerBirthInfo: {
+    // 항상 필수.
+    calendarType: "SOLAR" | "LUNAR";
+    birthDate: string;
+    isLeapMonth?: boolean;
     birthTimeUnknown: boolean;
     birthTime?: string;
   };
@@ -267,16 +277,20 @@ const FiveElementsRequestSchema = z.object({
 ```
 - **Zod Schema**
 ```ts
+const BirthInfoSchema = z.object({
+  calendarType: z.enum(["SOLAR", "LUNAR"]),
+  birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  isLeapMonth: z.boolean().optional(),
+  birthTimeUnknown: z.boolean(),
+  birthTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
+});
+
 const RelationshipRequestSchema = z.object({
   relationshipType: z.enum(["FAMILY", "FRIEND", "ROMANTIC", "COLLEAGUE", "OTHER"]),
   relationshipGoalTagId: z.string().uuid(),
   partnerNickname: z.string().min(1).max(20),
-  partnerBirthInfo: z.object({
-    calendarType: z.enum(["SOLAR", "LUNAR"]),
-    birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    birthTimeUnknown: z.boolean(),
-    birthTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
-  }).optional(),
+  myBirthInfo: BirthInfoSchema.optional(),
+  partnerBirthInfo: BirthInfoSchema,
 });
 ```
 - **요청 예시**
@@ -284,27 +298,32 @@ const RelationshipRequestSchema = z.object({
 {
   "relationshipType": "FRIEND",
   "relationshipGoalTagId": "2f3a4b5c-0000-0000-0000-000000000001",
-  "partnerNickname": "민지"
+  "partnerNickname": "민지",
+  "myBirthInfo": { "calendarType": "SOLAR", "birthDate": "1996-04-12", "birthTimeUnknown": true },
+  "partnerBirthInfo": { "calendarType": "SOLAR", "birthDate": "1998-07-20", "birthTimeUnknown": true }
 }
 ```
 - **성공 응답 예시 (201)**
 ```json
 {
   "relationshipAnalysisId": "e1f2a3b4-0000-0000-0000-000000000001",
-  "myStone": { "id": "aa11...", "nameKo": "로즈쿼츠", "nameEn": "Rose Quartz" },
-  "partnerStone": null,
-  "weStone": { "id": "cc33...", "nameKo": "시트린", "nameEn": "Citrine" },
+  "myStone": { "id": "aa11...", "nameKo": "로즈쿼츠", "nameEn": "Rose Quartz", "colorHex": "#F4C2C2", "imageUrl": "/images/jewelry/rose-quartz.png" },
+  "partnerStone": { "id": "bb22...", "nameKo": "오팔", "nameEn": "Opal", "colorHex": "#E6E6FA", "imageUrl": "/images/jewelry/opal.png" },
+  "weStone": { "id": "cc33...", "nameKo": "시트린", "nameEn": "Citrine", "colorHex": "#E4D00A", "imageUrl": "/images/jewelry/citrine.png" },
   "conversationPrompt": "요즘 서로에게 가장 고마웠던 순간은 언제였나요?",
   "microAction": "이번 주 안에 서로에게 짧은 안부를 전해보세요.",
-  "status": "PENDING_PARTNER"
+  "usedFallback": false
 }
 ```
-- **오류 응답**: `VALIDATION_ERROR`(별명 길이/형식), `NOT_FOUND`(Recommendation 또는 태그 없음).
+- **오류 응답**: `VALIDATION_ERROR`(별명 길이/형식, `partnerBirthInfo` 누락, 오행 분석 미완료 상태에서 `myBirthInfo` 누락), `NOT_FOUND`(Recommendation 또는 태그 없음).
 - **Rate limit**: 세션당 분당 5회.
-- **Idempotency**: 비멱등(호출마다 새 `RelationshipAnalysis` 생성).
-- **개인정보 처리**: `partnerNickname`, `partnerBirthInfo`는 envelope encryption 저장, 응답/공유/분석 이벤트에는 원문 미노출.
-- **관련 화면**: S09, S10, S11, S12.
+- **Idempotency**: 비멱등(호출마다 새 `RelationshipAnalysis` 생성, 상대방 `FiveElementProfile`도 매번 새로 계산).
+- **개인정보 처리**: `partnerNickname`, `myBirthInfo`/`partnerBirthInfo`는 envelope encryption 저장, 응답/공유/분석 이벤트에는 원문 미노출.
+- **우리의 원석 계산**: 나의 소원·감정 태그 + 나와 상대방 각각의 오행 필요 기운(둘 다 항상 존재) + 관계 목표를 함께 반영한다([08-recommendation-engine.md](08-recommendation-engine.md)의 `combinedElementAffinity` 참조).
+- **관련 화면**: S09, S10, S11, S12(실제 구현에서는 하나의 클라이언트 컴포넌트 내 단계 전환으로 통합, 실제 구현 참고).
 - **테스트 케이스**: API-06, E2E-06.
+
+**실제 구현 참고**: 애초 설계는 상대방 출생정보를 선택 사항으로 두고, 상대방이 별도 초대 링크로 나중에 채워 넣는 비동기 흐름(FR-REL-005/006)을 함께 제공했다. 하지만 상대방 출생정보 없이는 "우리의 원석"이 상대방의 사주를 전혀 반영하지 못해 결과가 일관성 없어 보이는 문제가 있었고, 상대방 정보를 필수로 바꾸면서 초대 링크 흐름 자체가 도달 불가능해져 **초대 링크 기능(FR-REL-005/006)은 제거했다**(docs/13 참조). 상대방과 함께 결과를 보고 싶다면 완성된 결과를 공유 링크([POST /recommendations/{id}/share-links](#post-recommendationsidshare-links))로 전달하는 방식을 사용한다.
 
 ---
 
@@ -531,8 +550,6 @@ const MeRecommendationsQuerySchema = z.object({
 
 ## 추가 검증 필요
 
-- 오행 프로필 재생성 정책(`POST .../five-elements` 재호출 시 갱신 vs 거부)
-- 피드백 재제출 허용 여부
-- `DELETE /share-links/{token}` 재호출 시 응답 코드
-- 각 엔드포인트 rate limit 최종 임계값
-- (향후 계정 기능 재검토 시) `/auth/*` 엔드포인트 상세 설계
+이 문서에 없던 아래 항목들은 실제 구현 과정에서 이미 결정되어 해소됐다: 오행 프로필 재생성(재호출 시 `CONFLICT` 409로 거부), 피드백 재제출(`CONFLICT` 409로 거부, 각 `Recommendation`당 1회), `DELETE /share-links/{token}` 재호출(이미 철회된 경우 `CONFLICT` 409), 엔드포인트별 rate limit(각 섹션에 명시된 값이 최종값). 계정 기능은 만들지 않기로 확정되어 `/auth/*` 설계도 더 이상 유효한 항목이 아니다([13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조).
+
+남은 항목은 없다 — 새로운 엔드포인트가 추가될 때마다 이 절을 갱신한다.

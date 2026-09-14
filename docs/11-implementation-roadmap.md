@@ -198,6 +198,32 @@ Phase 2 완료 직후 "비회원 세션의 민감정보 삭제 경로 부재" �
 - **`GET /me/recommendations`(원안) 대신 `GET /recommendations` 구현**: "회원(me)" 개념이 없어 이름을 바꾸고, 인증은 세션 토큰만으로 충분하다. 응답 스키마는 원안에서 `relationshipCount`(Phase 3 미구현)만 제외하고 동일하게 유지했다.
 - **S14(`/library`) 구현**: 원안대로 "보관함"/"개인정보 설정" 두 탭 구조를 유지하되, 개인정보 설정 탭은 별도 UI를 새로 만들지 않고 기존 `/privacy` 페이지로 링크만 연결했다(중복 구현 회피). 결과 화면(S05, S08)에는 "이 결과는 보관함에서 다시 볼 수 있어요" 링크를 추가해 별도의 "저장" 동작 없이도(계정이 없으므로 애초에 모든 결과가 세션에 자동으로 남는다) 보관함의 존재를 알린다.
 
+## 실제 구현 참고 (Phase 3 관계 원석)
+
+사용자가 "빨리 개발할 수 있도록 최대한 간단하게 구현"을 명시적으로 요청해, 원안(S09~S12, 비동기 초대 링크 흐름)을 아래와 같이 단순화했다(자세한 결정 근거는 [13-decisions-and-open-questions.md](13-decisions-and-open-questions.md#확정된-제품-결정) 참조).
+
+- **기본 흐름은 동기, 초대 링크는 나중에 별도로 추가**: `POST /recommendations/{id}/relationship` 한 번의 호출에서 요청자가 상대방의 닉네임과(선택) 생년월일시까지 함께 제출하는 동기 흐름을 먼저 만들었다. 이후 사용자가 초대 링크 기능(FR-REL-005/006)을 요청해, 파트너 정보 없이 생성된 결과에 한해 `POST /recommendations/{id}/relationship/{relationshipAnalysisId}/invite`(토큰 발급) → `GET /relationship-invites/{token}`(미리보기, 인증 불필요) → `POST /relationship-invites/{token}/respond`(상대방이 자신의 생년월일시 제출)의 3개 엔드포인트로 추가했다. 원안의 `status: RelationshipStatus` 컬럼은 저장하지 않고 `partnerStoneId` 유무로 매 응답마다 계산한다(이중 관리 방지, [13-decisions-and-open-questions.md](13-decisions-and-open-questions.md#확정된-제품-결정) 참조). 상대방이 제출한 생년월일시의 `ConsentRecord`는 상대방 세션이 없으므로 요청자의 `anonymousSessionId`에 귀속시켜, 기존 세션 삭제 cascade 경로를 그대로 재사용한다.
+- **소유자 화면이 완성된 초대 결과를 다시 볼 수 있도록 `GET /recommendations/{id}`에 `relationships` 배열을 추가**했다(원안 API 스펙에 이미 `"relationships": []` 자리표시가 있었다). `RelationshipView`는 마운트 시 이 배열의 최신 항목을 조회해 있으면 바로 결과 단계로, 없으면 인트로 단계로 진입한다 — 그래야 초대를 보낸 뒤 페이지를 벗어났다가 돌아와도 상대방이 응답한 최신 상태(상대의 원석 포함)를 볼 수 있다.
+- **UI는 4개 화면(S09~S12) 대신 컴포넌트 하나(`RelationshipView`, `src/components/relationship/RelationshipView.tsx`)의 내부 스텝 전환(`intro→form→loading→result`)으로 구현**했다. 라우트는 `/result/[id]/relationship` 하나뿐이다.
+- **관계 유형(`relationshipType`)을 원석 점수화 신호에서 제외**: [08-recommendation-engine.md](08-recommendation-engine.md) 원안은 `relationshipType`에 0.10 가중치를 배정했으나, 원석↔관계유형 친화도를 뒷받침할 근거(전문가 검수 전)가 없어 제외하고 나머지 신호에 비례 배분했다. `relationshipType`은 여전히 LLM 대화 제안 카피의 맥락 입력으로는 쓰인다(`src/lib/llm/prompts/relationship.ts`).
+- **`partner-five-elements`라는 4번째 엔진 컨텍스트를 새로 추가**했다(`src/lib/engine/weights.ts`). 상대방은 본인 소원/감정을 입력하지 않으므로 오행 보완 가중치만 1.0으로 상대방의 원석을 정한다.
+- **상대방 오행 프로필은 LLM 카피를 생성하지 않는다**: `FiveElementProfile`의 `heartSummary`/`rationale`/`comfortLines`/`microAction` 등 카피 필드를 Phase 3에서 모두 nullable로 바꾸고, 상대방 프로필에는 `null`로 남겨 불필요한 LLM 호출을 피했다. 본인 오행(S08) 결과에서만 이 필드들이 채워진다.
+- **공유(`ShareLink`)는 `scope: "relationship"` + `relationshipAnalysisId`(nullable, `ON DELETE CASCADE`) 컬럼만 추가**해 기존 문자열 `scope` 컬럼 방식을 그대로 확장했다(다형성 CHECK 제약 도입은 하지 않음, Phase 2와 동일한 방식 유지).
+- **`catalog/wishes`에 `relationshipGoals`를 추가**해 새 엔드포인트를 만들지 않고 재사용했다(`RELATIONSHIP_GOAL` 태그 5종).
+- **검증**: 통합 테스트 12개 신규 추가(관계 원석 생성 5개, 공유 링크 2개), Playwright E2E 1개(`e2e/relationship-flow.spec.ts`) 추가. E2E 작성 중 `getByText("우리의 원석")`이 로딩 문구("우리의 원석을 찾고 있어요...")의 부분 문자열과 겹쳐 병렬 실행 시 간헐적으로 오탐 성공하는 문제를 발견해, 결과 전용 문구("대화를 시작해보세요")로 단언을 교체했다 — Playwright의 `getByText`는 기본이 부분 일치라는 점을 재확인.
+- **초대 링크 검증(이후 제거됨)**: 통합 테스트 4개(`invite/route.test.ts`, 정상 완성/재사용 차단/소유자 아님/존재하지 않는 토큰) + Playwright E2E 1개(`e2e/relationship-invite-flow.spec.ts`, 별도 브라우저 컨텍스트로 소유자↔상대방 양쪽을 모두 조작)를 추가했다. `npx playwright test` 전체 실행(4-worker 병렬) 중 이 테스트가 실제 OpenAI 호출 경합으로 60초 타임아웃 1회 발생 → 재실행 시 21/21 전체 통과로 일회성임을 확인(Phase 2에서도 관측된 동일 패턴, 코드 회귀 아님). **아래 "실제 구현 참고 (상대방 출생정보 필수화)" 절에서 설명하듯 이 초대 흐름 전체가 이후 제거되어, 위 테스트와 라우트도 함께 삭제됐다.**
+
+## 실제 구현 참고 (상대방 출생정보 필수화)
+
+사용자가 관계 원석 결과에서 "나는 자수정, 상대방은 오팔(오행 화면) vs 나는 아마조나이트, 상대방은 로즈쿼츠(관계 화면)"처럼 같은 사람의 원석이 화면마다 다르게 나오는 것을 발견해 문제를 제기했다. 원인은 두 가지였다: (1) 관계 화면의 "나의 원석"이 오행 통합 결과(`fiveElementProfile.integratedStoneId`)가 아니라 기본 추천(`recommendation.stoneId`)을 그대로 쓰고 있었고, (2) "우리의 원석"이 나의 오행만 반영하고 상대방의 오행은 전혀 반영하지 않았다(상대방 출생정보가 애초에 선택 입력이라 없을 수도 있었기 때문). 이를 바로잡는 과정에서 사용자가 "관계 원석을 받으려면 나와 상대방의 생년월일을 둘 다 받은 뒤에 추천하라"고 범위를 명확히 해, 아래와 같이 재설계했다(자세한 결정 근거는 [13-decisions-and-open-questions.md](13-decisions-and-open-questions.md#확정된-제품-결정) 참조).
+
+- **"나의 원석" 버그 수정**: `relationship/route.ts`가 `recommendation.fiveElementProfile?.integratedStoneId`를 우선 사용하도록 변경(없으면 이번 요청에서 새로 계산).
+- **"우리의 원석"이 두 사람의 오행을 모두 반영하도록 엔진 확장**: `FiveElementSignal`에 `partnerNeededElement`를 추가하고, 둘 다 있으면 `combinedElementAffinity()`(각자의 필요 기운에 대한 오행 친화도 평균)를 사용하도록 `score.ts`를 확장했다([08-recommendation-engine.md](08-recommendation-engine.md) 참조).
+- **상대방 생년월일시를 선택 → 필수로 변경**: 상대방의 오행 없이는 "우리의 원석"이 상대방을 전혀 반영하지 못해 결과가 일관성 없어 보이는 근본 원인이었으므로, `partnerBirthInfo`를 `RelationshipRequestSchema`의 필수 필드로 바꿨다. 이미 오행 분석(S06~S08)을 마친 사용자는 `myBirthInfo`를 생략할 수 있고(기존 프로필 재사용), 그렇지 않으면 `myBirthInfo`도 이번 요청에 함께 제출해야 한다 — 공용 헬퍼 `createFiveElementProfileForRecommendation()`(`src/lib/fiveElements/createProfile.ts`)으로 오행 계산·LLM 카피 생성·저장 로직을 `five-elements/route.ts`와 `relationship/route.ts`가 공유하도록 추출했다.
+- **초대 링크 기능(FR-REL-005/006) 전체 제거**: 상대방 출생정보가 필수가 되면서 "파트너 정보 없이 결과를 만들고 나중에 초대 링크로 채운다"는 흐름 자체가 도달 불가능해졌다. 관련 라우트(`.../relationship/[relationshipAnalysisId]/invite`, `/relationship-invites/[token]` 전체), 컴포넌트(`InviteButton`, `RelationshipInviteView`), 테스트(`e2e/relationship-invite-flow.spec.ts` 포함)를 모두 삭제하고, `inviteTokenHash`/`inviteExpiresAt` 컬럼을 제거하는 마이그레이션(`20260913232442_drop_relationship_invite`)을 적용했다.
+- **UI(`RelationshipView`)**: 상대방 정보 입력 폼에 항상 "상대방의 생년월일시" 섹션을 노출하고, 오행 분석 미완료 사용자에게는 "나의 생년월일시" 섹션도 추가로 노출한다(공용 `BirthDateFields` 컴포넌트로 두 섹션의 UI를 재사용). 결과 화면의 "나: X / 상대: Y" 칩도 이제 항상 표시된다(이전에는 상대 정보가 없을 수 있어 조건부였다).
+- **검증**: 관계 라우트 통합 테스트를 7개로 재작성(둘 다 필수/오행 재사용/누락 시 400 등), 엔진 테스트 1개 추가(`combinedElementAffinity` 가중 평균 검증), `e2e/relationship-flow.spec.ts`를 새 필수 입력 흐름에 맞게 재작성. `npx tsc --noEmit`/`npx eslint src`/`npx vitest run`(전체 스위트)/`npx playwright test`(전체 20개) 모두 통과 확인.
+
 ## Assumptions
 
 - 각 단계의 "예정 경로"는 Next.js App Router 관례를 따른 제안이며 실제 구현 시 조정될 수 있다.

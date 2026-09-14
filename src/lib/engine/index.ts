@@ -9,4 +9,5 @@ export type {
   EngineFiveElement,
   WishSignal,
   FiveElementSignal,
+  RelationshipSignal,
 } from "./types";

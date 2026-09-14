@@ -1,17 +1,12 @@
 import { NextResponse } from "next/server";
 import { apiError } from "@/lib/apiError";
-import { encryptField } from "@/lib/crypto/envelope";
 import { prisma } from "@/lib/db";
-import { recommend } from "@/lib/engine";
-import { calculateFiveElements } from "@/lib/fiveElements/calculate";
-import { generateFiveElementsCopy } from "@/lib/llm/generateFiveElementsCopy";
+import { createFiveElementProfileForRecommendation } from "@/lib/fiveElements/createProfile";
 import { getLLMProvider } from "@/lib/llm/getProvider";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { resolveSession } from "@/lib/session";
 import { FiveElementsRequestSchema } from "@/lib/validation/fiveElements";
 import { zodToFieldErrors } from "@/lib/validation/zodToFieldErrors";
-
-const RECENT_STONE_WINDOW = 3;
 
 export async function POST(
   request: Request,
@@ -60,123 +55,32 @@ export async function POST(
     );
   }
   const body = parsed.data;
-  const [year, month, day] = body.birthDate.split("-").map(Number);
-  const [hour, minute] = body.birthTimeUnknown
-    ? [undefined, undefined]
-    : (body.birthTime ?? "").split(":").map(Number);
 
-  const fiveElements = calculateFiveElements({
-    calendarType: body.calendarType,
-    year,
-    month,
-    day,
-    isLeapMonth: body.isLeapMonth,
-    birthTimeUnknown: body.birthTimeUnknown,
-    hour,
-    minute,
-  });
-
-  const primaryWishTag = await prisma.tag.findUniqueOrThrow({
-    where: { id: recommendation.wishSession.primaryWishTagId },
-  });
-
-  const [stones, stoneTags, recentRecommendations] = await Promise.all([
+  const [stones, stoneTags] = await Promise.all([
     prisma.stone.findMany({ where: { isActive: true } }),
     prisma.stoneTag.findMany(),
-    prisma.recommendation.findMany({
-      where: { wishSession: { anonymousSessionId: session.id } },
-      orderBy: { createdAt: "desc" },
-      take: RECENT_STONE_WINDOW,
-      select: { stoneId: true },
-    }),
   ]);
 
-  const engineResult = recommend(
-    {
-      context: "five-elements",
-      wish: {
-        primaryWishTagId: recommendation.wishSession.primaryWishTagId,
-        secondaryWishTagId: recommendation.wishSession.secondaryWishTagId ?? undefined,
-        heartTagId: recommendation.wishSession.heartTagId,
-      },
-      fiveElement: { neededElement: fiveElements.neededElement },
-      recentStoneIds: recentRecommendations.map((r) => r.stoneId),
-    },
-    stones.map((s) => ({ id: s.id, slug: s.slug, element: s.element })),
-    stoneTags.map((st) => ({
+  const { profile, integratedStone } = await createFiveElementProfileForRecommendation({
+    recommendationId: recommendation.id,
+    wishSession: recommendation.wishSession,
+    anonymousSessionId: session.id,
+    birthInfo: body,
+    consentVersion: body.consentVersion,
+    stones,
+    stoneTags: stoneTags.map((st) => ({
       stoneId: st.stoneId,
       tagId: st.tagId,
       weight: st.weight,
     })),
-  );
-
-  const integratedStone = stones.find((s) => s.id === engineResult.stoneId)!;
-  const otherStoneNames = stones
-    .filter((s) => s.id !== integratedStone.id)
-    .flatMap((s) => [s.nameKo, s.nameEn]);
-
-  const generated = await generateFiveElementsCopy(
-    {
-      stoneSlug: integratedStone.slug,
-      stoneNameKo: integratedStone.nameKo,
-      stoneNameEn: integratedStone.nameEn,
-      stoneSummary: integratedStone.summary,
-      stoneDescription: integratedStone.description,
-      neededElement: fiveElements.neededElement,
-      balance: fiveElements.balance,
-      primaryWishLabel: primaryWishTag.labelKo,
-      otherStoneNames,
-    },
     llm,
-  );
-
-  const consentRecord = await prisma.consentRecord.create({
-    data: {
-      anonymousSessionId: session.id,
-      consentType: "FIVE_ELEMENTS_BIRTH_INFO",
-      consentVersion: body.consentVersion,
-      granted: true,
-      grantedAt: new Date(),
-    },
-  });
-
-  const birthDateEncrypted = encryptField(body.birthDate);
-  const birthTimeEncrypted =
-    !body.birthTimeUnknown && body.birthTime
-      ? encryptField(body.birthTime)
-      : null;
-
-  const profile = await prisma.fiveElementProfile.create({
-    data: {
-      birthDateEncrypted,
-      calendarType: body.calendarType,
-      isLeapMonth: body.isLeapMonth ?? false,
-      birthTimeUnknown: body.birthTimeUnknown,
-      birthTimeEncrypted,
-      computedElement: fiveElements.neededElement,
-      balanceJson: fiveElements.balance,
-      integratedStoneId: integratedStone.id,
-      heartSummary: generated.copy.heartSummary,
-      rationale: generated.copy.rationale,
-      comfortLines: generated.copy.comfortLines,
-      microAction: generated.copy.microAction,
-      usedFallback: generated.usedFallback,
-      promptVersion: generated.promptVersion,
-      modelName: generated.modelName,
-      consentRecordId: consentRecord.id,
-    },
-  });
-
-  await prisma.recommendation.update({
-    where: { id: recommendation.id },
-    data: { fiveElementProfileId: profile.id },
   });
 
   return NextResponse.json(
     {
       fiveElementProfileId: profile.id,
       computedElement: profile.computedElement,
-      balance: fiveElements.balance,
+      balance: profile.balanceJson,
       integratedStone: {
         id: integratedStone.id,
         slug: integratedStone.slug,

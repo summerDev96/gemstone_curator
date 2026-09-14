@@ -13,6 +13,7 @@ const { GET: getShare } = await import("../../../shares/[token]/route");
 const { DELETE: deleteShareLink } = await import(
   "../../../share-links/[token]/route"
 );
+const { POST: createRelationship } = await import("../relationship/route");
 
 async function setup(): Promise<{ token: string; id: string }> {
   const sessionRes = await issueSession(
@@ -126,6 +127,63 @@ describe("공유 링크 발급/조회/철회", () => {
       { params: Promise.resolve({ token: shareToken }) },
     );
     expect(revokeRes.status).toBe(404);
+  });
+
+  it("relationship 범위는 관계 원석 결과를 공개 조회할 수 있다", async () => {
+    const { token, id } = await setup();
+    const goalTag = await prisma.tag.findFirstOrThrow({
+      where: { category: "RELATIONSHIP_GOAL" },
+    });
+    const relationshipRes = await createRelationship(
+      new Request(`http://localhost/api/v1/recommendations/${id}/relationship`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({
+          relationshipType: "FRIEND",
+          relationshipGoalTagId: goalTag.id,
+          partnerNickname: "민지",
+          myBirthInfo: { calendarType: "SOLAR", birthDate: "1996-04-12", birthTimeUnknown: true },
+          partnerBirthInfo: { calendarType: "SOLAR", birthDate: "1998-07-20", birthTimeUnknown: true },
+        }),
+      }),
+      { params: Promise.resolve({ id }) },
+    );
+    const { relationshipAnalysisId } = await relationshipRes.json();
+
+    const createRes = await createShareLink(
+      new Request(`http://localhost/api/v1/recommendations/${id}/share-links`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ scope: "relationship", relationshipAnalysisId }),
+      }),
+      { params: Promise.resolve({ id }) },
+    );
+    expect(createRes.status).toBe(201);
+    const { token: shareToken } = await createRes.json();
+
+    const publicRes = await getShare(
+      new Request(`http://localhost/api/v1/shares/${shareToken}`),
+      { params: Promise.resolve({ token: shareToken }) },
+    );
+    expect(publicRes.status).toBe(200);
+    const body = await publicRes.json();
+    expect(body.scope).toBe("relationship");
+    expect(body.stone.nameKo).toBeTruthy();
+    expect(body.summary).toBeTruthy();
+    expect(JSON.stringify(body)).not.toContain("민지");
+  });
+
+  it("relationship 범위인데 relationshipAnalysisId가 없으면 400을 반환한다", async () => {
+    const { token, id } = await setup();
+    const res = await createShareLink(
+      new Request(`http://localhost/api/v1/recommendations/${id}/share-links`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify({ scope: "relationship" }),
+      }),
+      { params: Promise.resolve({ id }) },
+    );
+    expect(res.status).toBe(400);
   });
 
   it("five-elements 범위는 오행 분석이 없으면 400을 반환한다", async () => {

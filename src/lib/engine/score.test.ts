@@ -19,7 +19,7 @@ describe("recommend (ENGINE-01: 누락 신호 재정규화)", () => {
       { stoneId: "stone-a", tagId: HEART_1, weight: 1 },
     ];
     const result = recommend(
-      { context: "basic", wish: { primaryWishTagId: WISH_1, heartTagId: HEART_1 }, recentStoneIds: [] },
+      { context: "basic", wish: { primaryWishTagId: WISH_1, heartTagId: HEART_1 } },
       stones,
       stoneTags,
     );
@@ -44,7 +44,6 @@ describe("recommend (ENGINE-02: 전체 가중치 적용)", () => {
           secondaryWishTagId: WISH_2,
           heartTagId: HEART_1,
         },
-        recentStoneIds: [],
       },
       stones,
       stoneTags,
@@ -59,7 +58,7 @@ describe("recommend (ENGINE-03: 동점 해결)", () => {
   it("점수가 동일하면 slug 오름차순으로 결정론적으로 선택한다", () => {
     // 어떤 원석에도 매칭되는 태그가 없어 전원 0점 동점 상황을 만든다.
     const result = recommend(
-      { context: "basic", wish: { primaryWishTagId: "no-match", heartTagId: "no-match" }, recentStoneIds: [] },
+      { context: "basic", wish: { primaryWishTagId: "no-match", heartTagId: "no-match" } },
       stones,
       [],
     );
@@ -74,61 +73,29 @@ describe("recommend (ENGINE-03: 동점 해결)", () => {
     const input = {
       context: "basic" as const,
       wish: { primaryWishTagId: WISH_1, heartTagId: HEART_1 },
-      recentStoneIds: [],
     };
     const results = Array.from({ length: 100 }, () =>
       recommend(input, stones, stoneTags).stoneId,
     );
     expect(new Set(results).size).toBe(1);
   });
-});
 
-describe("recommend (ENGINE-04: 반복 추천 패널티)", () => {
-  it("최근 1회 등장한 원석은 0.85배 감쇠되어 다른 원석에 역전당할 수 있다", () => {
+  it("같은 세션에서 반복 호출해도(recentStoneIds에 해당하는 이력이 있어도) 결과가 흔들리지 않는다", () => {
+    // 오행 분석·관계 원석은 생년월일시+소원에 따라 안정적으로 정해져야 하므로,
+    // 다른 추천 이력이 존재해도(과거에는 반복 패널티로 결과가 바뀌었다) 항상 같은 원석을 반환해야 한다.
     const stoneTags: EngineStoneTag[] = [
       { stoneId: "stone-a", tagId: WISH_1, weight: 1.0 },
       { stoneId: "stone-b", tagId: WISH_1, weight: 0.9 },
     ];
-    const withoutHistory = recommend(
-      { context: "basic", wish: { primaryWishTagId: WISH_1, heartTagId: HEART_1 }, recentStoneIds: [] },
-      stones,
-      stoneTags,
-    );
-    expect(withoutHistory.stoneId).toBe("stone-a");
-
-    const withHistory = recommend(
-      {
-        context: "basic",
-        wish: { primaryWishTagId: WISH_1, heartTagId: HEART_1 },
-        recentStoneIds: ["stone-a"],
-      },
-      stones,
-      stoneTags,
-    );
-    // 보조 소원이 없어 주 소원 가중치가 재정규화(~0.588)된 상태에서
-    // stone-a는 반복 패널티(0.85배)로 감쇠되어 stone-b(패널티 없음)에게 역전당한다.
-    expect(withHistory.stoneId).toBe("stone-b");
-  });
-
-  it("최근 2회 이상 등장한 원석은 0.7배 감쇠된다", () => {
-    const stoneTags: EngineStoneTag[] = [
-      { stoneId: "stone-a", tagId: WISH_1, weight: 1.0 },
-    ];
-    const withoutHistory = recommend(
-      { context: "basic", wish: { primaryWishTagId: WISH_1, heartTagId: HEART_1 }, recentStoneIds: [] },
-      stones,
-      stoneTags,
-    );
-    const withHistory = recommend(
-      {
-        context: "basic",
-        wish: { primaryWishTagId: WISH_1, heartTagId: HEART_1 },
-        recentStoneIds: ["stone-a", "stone-a"],
-      },
-      stones,
-      stoneTags,
-    );
-    expect(withHistory.finalScore).toBeCloseTo(withoutHistory.finalScore * 0.7, 5);
+    const input = {
+      context: "basic" as const,
+      wish: { primaryWishTagId: WISH_1, heartTagId: HEART_1 },
+    };
+    const first = recommend(input, stones, stoneTags);
+    const second = recommend(input, stones, stoneTags);
+    expect(first.stoneId).toBe("stone-a");
+    expect(second.stoneId).toBe(first.stoneId);
+    expect(second.score).toBe(first.score);
   });
 });
 
@@ -146,7 +113,7 @@ describe("recommend (ENGINE-06: 성능)", () => {
 
     const start = performance.now();
     recommend(
-      { context: "basic", wish: { primaryWishTagId: WISH_1, heartTagId: HEART_1 }, recentStoneIds: [] },
+      { context: "basic", wish: { primaryWishTagId: WISH_1, heartTagId: HEART_1 } },
       manyStones,
       manyTags,
     );

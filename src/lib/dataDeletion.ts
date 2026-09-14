@@ -7,7 +7,13 @@ import { prisma } from "./db";
  *
  * 삭제 순서가 중요하다: `FiveElementProfile.consentRecordId`는 ON DELETE RESTRICT라서
  * `ConsentRecord`(AnonymousSession 삭제 시 CASCADE 대상)보다 먼저 지워야 한다.
- * `Recommendation.fiveElementProfileId`는 ON DELETE SET NULL이므로 순서를 지키면 안전하다.
+ * `Recommendation.fiveElementProfileId`/`RelationshipAnalysis.partnerFiveElementProfileId`는
+ * 둘 다 ON DELETE SET NULL이므로 순서를 지키면 안전하다.
+ *
+ * `FiveElementProfile`은 두 경로로 이 세션에 속할 수 있다: (1) 본인 오행 분석
+ * (`Recommendation.fiveElementProfileId`), (2) 관계 분석 중 상대방 오행
+ * (`RelationshipAnalysis.partnerFiveElementProfileId`) — 두 경로 모두 조회해야
+ * 상대방의 암호화된 생년월일시가 삭제 누락되지 않는다.
  *
  * 멱등성: 이미 삭제된(또는 동시에 다른 호출이 먼저 삭제한) 세션 id로 다시 호출해도
  * 예외를 던지지 않는다(`deleteMany`는 대상이 없어도 실패하지 않음) — 세션 만료 배치와
@@ -19,9 +25,14 @@ export async function deleteAllDataForSession(
   return prisma.$transaction(async (tx) => {
     const profiles = await tx.fiveElementProfile.findMany({
       where: {
-        recommendation: {
-          wishSession: { anonymousSessionId },
-        },
+        OR: [
+          { recommendation: { wishSession: { anonymousSessionId } } },
+          {
+            partnerOfAnalyses: {
+              some: { recommendation: { wishSession: { anonymousSessionId } } },
+            },
+          },
+        ],
       },
       select: { id: true },
     });

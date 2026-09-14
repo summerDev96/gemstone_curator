@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { StepHeader } from "@/components/ui/StepHeader";
 import { FeedbackRating } from "@/components/result/FeedbackRating";
-import { ExpansionCtaCard } from "@/components/result/ExpansionCtaCard";
 import { NavigableCtaCard } from "@/components/result/NavigableCtaCard";
 import { ShareButton } from "@/components/result/ShareButton";
+import { StoneAvatar } from "@/components/ui/StoneAvatar";
 import { TrackView } from "@/components/TrackView";
 import { apiFetch } from "@/lib/client/session";
 
@@ -80,23 +80,15 @@ export function ResultView({ id }: { id: string }) {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4">
       <TrackView event="recommendation_view" props={{ stone: data.stone.nameKo }} />
-      <StepHeader
-        step={3}
-        totalSteps={3}
-        rightSlot={<ShareButton recommendationId={data.id} scope="basic" />}
-      />
+      <StepHeader step={3} totalSteps={3} />
 
       <section className="flex flex-col items-center gap-3 py-4 text-center">
-        <div
-          aria-hidden="true"
-          className="flex h-32 w-32 items-center justify-center rounded-full"
-          style={{ backgroundColor: `${data.stone.colorHex}33` }}
-        >
-          <div
-            className="h-20 w-20 rounded-full"
-            style={{ backgroundColor: data.stone.colorHex }}
-          />
-        </div>
+        <StoneAvatar
+          imageUrl={data.stone.imageUrl}
+          colorHex={data.stone.colorHex}
+          alt={data.stone.nameKo}
+          size={128}
+        />
         <h1 className="text-xl font-semibold text-text-primary">
           {data.stone.nameKo}
           <span className="pl-2 text-sm font-normal text-text-secondary">
@@ -143,10 +135,11 @@ export function ResultView({ id }: { id: string }) {
             href={`/result/${data.id}/five-elements/intro`}
           />
         )}
-        <ExpansionCtaCard
+        <NavigableCtaCard
           title="관계 원석 알아보기"
           description="소중한 인연과의 원석도 함께 알아볼 수 있어요."
           event="relationship_cta_click"
+          href={`/result/${data.id}/relationship`}
         />
       </div>
 
@@ -158,6 +151,7 @@ export function ResultView({ id }: { id: string }) {
           </Link>
           에서 다시 볼 수 있어요.
         </p>
+        <ShareButton recommendationId={data.id} scope="basic" />
         <PrimaryButton variant="secondary" onClick={() => router.push("/")}>
           처음으로
         </PrimaryButton>

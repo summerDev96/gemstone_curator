@@ -13,6 +13,12 @@
     { "slug": "tired", "category": "EMOTION", "labelKo": "많이 지쳐 있어요" },
     { "slug": "lost", "category": "EMOTION", "labelKo": "방향을 잃은 것 같아요" },
     { "slug": "grateful", "category": "EMOTION", "labelKo": "그래도 감사한 마음이에요" },
-    { "slug": "determined", "category": "EMOTION", "labelKo": "다시 힘을 내보려 해요" }
+    { "slug": "determined", "category": "EMOTION", "labelKo": "다시 힘을 내보려 해요" },
+
+    { "slug": "closer", "category": "RELATIONSHIP_GOAL", "labelKo": "더 가까워지고 싶어요" },
+    { "slug": "less-conflict", "category": "RELATIONSHIP_GOAL", "labelKo": "갈등을 줄이고 싶어요" },
+    { "slug": "understand-more", "category": "RELATIONSHIP_GOAL", "labelKo": "서로를 더 이해하고 싶어요" },
+    { "slug": "more-time-together", "category": "RELATIONSHIP_GOAL", "labelKo": "함께하는 시간을 늘리고 싶어요" },
+    { "slug": "express-gratitude", "category": "RELATIONSHIP_GOAL", "labelKo": "고마운 마음을 더 표현하고 싶어요" }
   ]
 }

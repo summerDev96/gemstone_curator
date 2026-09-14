@@ -1,5 +1,5 @@
 {
-  "_note": "초안 시드 데이터입니다. 전문가 검수 전까지는 확정된 콘텐츠로 취급하지 마세요 (docs/13 참조). element 필드는 Phase 2 오행 기능을 위해 예약된 값이며 Phase 1 로직에서는 사용되지 않습니다.",
+  "_note": "초안 시드 데이터입니다. 전문가 검수 전까지는 확정된 콘텐츠로 취급하지 마세요 (docs/13 참조). element 필드는 오행 기능을 위해 사용됩니다. imageUrl은 서비스용으로 사전 생성·검수한 주얼리 예시 이미지이며 실제 판매 상품이 아닙니다.",
   "stones": [
     {
       "slug": "rose-quartz",
@@ -8,7 +8,8 @@
       "summary": "스스로를 다정하게 대하고 싶을 때 함께하는 은은한 분홍빛 원석이에요.",
       "description": "로즈쿼츠는 오래전부터 자기 자신을 향한 다정함과 위로를 상징하는 원석으로 여겨져 왔어요. 지친 마음을 가만히 다독이고 싶은 순간에 어울려요.",
       "colorHex": "#E8B4B8",
-      "element": "WATER"
+      "element": "WATER",
+      "imageUrl": "/images/jewelry/rose-quartz.png"
     },
     {
       "slug": "amethyst",
@@ -17,16 +18,8 @@
       "summary": "복잡한 생각을 차분히 가라앉히고 싶을 때 어울리는 보랏빛 원석이에요.",
       "description": "자수정은 마음의 평정심과 차분한 생각 정리를 상징하는 원석으로 여겨져요. 머릿속이 어수선할 때 곁에 두고 싶은 원석이에요.",
       "colorHex": "#9B7EBD",
-      "element": "METAL"
-    },
-    {
-      "slug": "citrine",
-      "nameKo": "시트린",
-      "nameEn": "Citrine",
-      "summary": "다시 힘을 내고 싶은 순간에 어울리는 따뜻한 노란빛 원석이에요.",
-      "description": "시트린은 활력과 자신감, 새로운 시작의 기운을 상징하는 원석으로 여겨져요. 한 걸음 내딛는 용기가 필요할 때 어울려요.",
-      "colorHex": "#E4B54A",
-      "element": "EARTH"
+      "element": "METAL",
+      "imageUrl": "/images/jewelry/amethyst.png"
     },
     {
       "slug": "clear-quartz",
@@ -35,7 +28,8 @@
       "summary": "생각을 맑게 정리하고 싶을 때 어울리는 투명한 원석이에요.",
       "description": "백수정은 명료함과 균형을 상징하는 원석으로 여겨져요. 여러 생각이 뒤엉켜 있을 때 하나씩 정리해보고 싶은 순간에 어울려요.",
       "colorHex": "#F5F3F0",
-      "element": "METAL"
+      "element": "METAL",
+      "imageUrl": "/images/jewelry/clear-quartz.png"
     },
     {
       "slug": "green-aventurine",
@@ -44,34 +38,198 @@
       "summary": "새로운 시작 앞에서 설렘을 느끼고 싶을 때 어울리는 초록빛 원석이에요.",
       "description": "그린아벤츄린은 새로운 기회와 성장의 기운을 상징하는 원석으로 여겨져요. 낯선 시작이 두렵지만 기대되는 순간에 어울려요.",
       "colorHex": "#7FA37A",
-      "element": "WOOD"
+      "element": "WOOD",
+      "imageUrl": "/images/jewelry/green-aventurine.png"
     },
     {
-      "slug": "carnelian",
-      "nameKo": "카넬리안",
-      "nameEn": "Carnelian",
-      "summary": "다시 힘을 내 앞으로 나아가고 싶을 때 어울리는 주황빛 원석이에요.",
-      "description": "카넬리안은 용기와 추진력을 상징하는 원석으로 여겨져요. 머뭇거림을 뒤로하고 움직이고 싶은 순간에 어울려요.",
-      "colorHex": "#C6672E",
-      "element": "FIRE"
+      "slug": "chalcedony",
+      "nameKo": "칼세도니",
+      "nameEn": "Chalcedony",
+      "summary": "마음을 부드럽게 다독이고 싶을 때 어울리는 은은한 하늘빛 원석이에요.",
+      "description": "칼세도니는 부드러움과 조화, 편안한 소통을 상징하는 원석으로 여겨져요. 서로에게 온화하게 다가가고 싶은 순간에 어울려요.",
+      "colorHex": "#A9C6D8",
+      "element": "WATER",
+      "imageUrl": "/images/jewelry/chalcedony.png"
     },
     {
-      "slug": "black-tourmaline",
-      "nameKo": "블랙투어마린",
-      "nameEn": "Black Tourmaline",
-      "summary": "마음의 안정이 필요할 때 곁에 두고 싶은 짙은 검은빛 원석이에요.",
-      "description": "블랙투어마린은 심리적 안정과 평온을 상징하는 원석으로 여겨져요. 불안한 마음을 가라앉히고 싶은 순간에 어울려요.",
-      "colorHex": "#2B2B2E",
-      "element": "WATER"
+      "slug": "larimar",
+      "nameKo": "라리마",
+      "nameEn": "Larimar",
+      "summary": "마음의 파도를 가라앉히고 싶을 때 함께하는 청록빛 원석이에요.",
+      "description": "라리마는 카리브해의 빛깔을 닮아 평온함과 치유의 기운을 상징하는 원석으로 여겨져요. 지친 마음을 잔잔하게 가라앉히고 싶은 순간에 어울려요.",
+      "colorHex": "#4FA8AE",
+      "element": "WATER",
+      "imageUrl": "/images/jewelry/larimar.png"
     },
     {
-      "slug": "sodalite",
-      "nameKo": "소달라이트",
-      "nameEn": "Sodalite",
-      "summary": "좋은 인연과 이해를 바라는 마음에 어울리는 짙은 파란빛 원석이에요.",
-      "description": "소달라이트는 소통과 이해, 좋은 인연의 기운을 상징하는 원석으로 여겨져요. 서로를 더 깊이 이해하고 싶은 순간에 어울려요.",
-      "colorHex": "#3B5486",
-      "element": "WATER"
+      "slug": "aquamarine",
+      "nameKo": "아쿠아마린",
+      "nameEn": "Aquamarine",
+      "summary": "새로운 출발 앞에서 용기가 필요할 때 어울리는 맑은 하늘빛 원석이에요.",
+      "description": "아쿠아마린은 맑음과 용기, 솔직한 소통을 상징하는 원석으로 여겨져요. 낯선 시작 앞에서 마음을 가다듬고 싶은 순간에 어울려요.",
+      "colorHex": "#8ED6D9",
+      "element": "WATER",
+      "imageUrl": "/images/jewelry/aquamarine.png"
+    },
+    {
+      "slug": "amazonite",
+      "nameKo": "아마조나이트",
+      "nameEn": "Amazonite",
+      "summary": "속마음을 솔직하게 전하고 싶을 때 어울리는 청록빛 원석이에요.",
+      "description": "아마조나이트는 솔직함과 균형, 부드러운 소통을 상징하는 원석으로 여겨져요. 하고 싶은 말을 차분히 전하고 싶은 순간에 어울려요.",
+      "colorHex": "#6FBBA6",
+      "element": "WOOD",
+      "imageUrl": "/images/jewelry/amazonite.png"
+    },
+    {
+      "slug": "turquoise",
+      "nameKo": "터키석",
+      "nameEn": "Turquoise",
+      "summary": "마음을 지키며 관계를 이어가고 싶을 때 어울리는 청록빛 원석이에요.",
+      "description": "터키석은 예로부터 지혜와 보호, 편안한 소통을 상징하는 원석으로 여겨져 왔어요. 서로를 이해하며 곁을 지키고 싶은 순간에 어울려요.",
+      "colorHex": "#3FB8AF",
+      "element": "WATER",
+      "imageUrl": "/images/jewelry/turquoise.png"
+    },
+    {
+      "slug": "jade",
+      "nameKo": "옥",
+      "nameEn": "Jade",
+      "summary": "조화로운 인연과 평온을 바라는 마음에 어울리는 깊은 초록빛 원석이에요.",
+      "description": "옥은 오래전부터 조화와 안정, 좋은 인연을 상징하는 원석으로 여겨져 왔어요. 함께하는 시간을 편안하게 지키고 싶은 순간에 어울려요.",
+      "colorHex": "#4F7942",
+      "element": "WOOD",
+      "imageUrl": "/images/jewelry/jade.png"
+    },
+    {
+      "slug": "jadeite",
+      "nameKo": "비취",
+      "nameEn": "Jadeite",
+      "summary": "스스로에 대한 확신을 되찾고 싶을 때 어울리는 영롱한 초록빛 원석이에요.",
+      "description": "비취는 고귀함과 자신감, 새로운 시작의 기운을 상징하는 원석으로 여겨져요. 흔들림 없이 나아가고 싶은 순간에 어울려요.",
+      "colorHex": "#00A86B",
+      "element": "WOOD",
+      "imageUrl": "/images/jewelry/jadeite.png"
+    },
+    {
+      "slug": "prehnite",
+      "nameKo": "프레나이트",
+      "nameEn": "Prehnite",
+      "summary": "복잡한 마음을 가만히 들여다보고 싶을 때 어울리는 연둣빛 원석이에요.",
+      "description": "프레나이트는 내면의 목소리에 귀 기울이는 힘과 회복을 상징하는 원석으로 여겨져요. 생각을 하나씩 정리하고 싶은 순간에 어울려요.",
+      "colorHex": "#C8D9A6",
+      "element": "WOOD",
+      "imageUrl": "/images/jewelry/prehnite.png"
+    },
+    {
+      "slug": "strawberry-quartz",
+      "nameKo": "스트로베리쿼츠",
+      "nameEn": "Strawberry Quartz",
+      "summary": "설레는 마음으로 인연을 나누고 싶을 때 어울리는 발그레한 원석이에요.",
+      "description": "스트로베리쿼츠는 다정함과 기쁨, 즐거운 인연의 기운을 상징하는 원석으로 여겨져요. 고마운 마음을 가볍게 전하고 싶은 순간에 어울려요.",
+      "colorHex": "#E5738A",
+      "element": "FIRE",
+      "imageUrl": "/images/jewelry/strawberry-quartz.png"
+    },
+    {
+      "slug": "lapis-lazuli",
+      "nameKo": "라피스라줄리",
+      "nameEn": "Lapis Lazuli",
+      "summary": "생각을 또렷하게 정리하고 싶을 때 어울리는 짙은 남색 원석이에요.",
+      "description": "라피스라줄리는 예로부터 지혜와 통찰, 스스로에 대한 확신을 상징하는 원석으로 여겨져 왔어요. 방향을 잃은 듯할 때 곁에 두고 싶은 원석이에요.",
+      "colorHex": "#26619C",
+      "element": "WATER",
+      "imageUrl": "/images/jewelry/lapis-lazuli.png"
+    },
+    {
+      "slug": "garnet",
+      "nameKo": "가넷",
+      "nameEn": "Garnet",
+      "summary": "다시 힘을 내고 싶은 순간에 어울리는 짙은 붉은빛 원석이에요.",
+      "description": "가넷은 열정과 활력, 흔들리지 않는 마음을 상징하는 원석으로 여겨져요. 지친 몸과 마음에 다시 온기를 채우고 싶은 순간에 어울려요.",
+      "colorHex": "#9B111E",
+      "element": "FIRE",
+      "imageUrl": "/images/jewelry/garnet.png"
+    },
+    {
+      "slug": "emerald",
+      "nameKo": "에메랄드",
+      "nameEn": "Emerald",
+      "summary": "소중한 인연을 더 깊이 가꾸고 싶을 때 어울리는 짙은 초록빛 원석이에요.",
+      "description": "에메랄드는 예로부터 성장과 신뢰, 깊은 인연을 상징하는 원석으로 여겨져 왔어요. 서로를 더 이해하며 함께 나아가고 싶은 순간에 어울려요.",
+      "colorHex": "#50C878",
+      "element": "WOOD",
+      "imageUrl": "/images/jewelry/emerald.png"
+    },
+    {
+      "slug": "pearl",
+      "nameKo": "진주",
+      "nameEn": "Pearl",
+      "summary": "차분한 마음으로 감사를 전하고 싶을 때 어울리는 은은한 원석이에요.",
+      "description": "진주는 순수함과 잔잔한 평온, 진심 어린 마음을 상징하는 보석으로 여겨져요. 고마운 마음을 조용히 전하고 싶은 순간에 어울려요.",
+      "colorHex": "#F0EAD6",
+      "element": "METAL",
+      "imageUrl": "/images/jewelry/pearl.png"
+    },
+    {
+      "slug": "ruby",
+      "nameKo": "루비",
+      "nameEn": "Ruby",
+      "summary": "뜨거운 마음으로 다시 나아가고 싶을 때 어울리는 붉은빛 원석이에요.",
+      "description": "루비는 열정과 용기, 깊은 애정을 상징하는 원석으로 여겨져 왔어요. 사랑하는 마음을 힘껏 표현하고 싶은 순간에 어울려요.",
+      "colorHex": "#9B111E",
+      "element": "FIRE",
+      "imageUrl": "/images/jewelry/ruby.png"
+    },
+    {
+      "slug": "peridot",
+      "nameKo": "페리도트",
+      "nameEn": "Peridot",
+      "summary": "무거운 마음을 내려놓고 싶을 때 어울리는 연둣빛 원석이에요.",
+      "description": "페리도트는 긍정과 회복, 새로운 기운을 상징하는 원석으로 여겨져요. 지나간 것을 내려놓고 다시 시작하고 싶은 순간에 어울려요.",
+      "colorHex": "#B4C424",
+      "element": "WOOD",
+      "imageUrl": "/images/jewelry/peridot.png"
+    },
+    {
+      "slug": "sapphire",
+      "nameKo": "사파이어",
+      "nameEn": "Sapphire",
+      "summary": "흔들림 없이 생각을 정리하고 싶을 때 어울리는 짙은 파란빛 원석이에요.",
+      "description": "사파이어는 지혜와 집중, 굳건한 마음을 상징하는 원석으로 여겨져요. 중심을 잃지 않고 나아가고 싶은 순간에 어울려요.",
+      "colorHex": "#0F52BA",
+      "element": "WATER",
+      "imageUrl": "/images/jewelry/sapphire.png"
+    },
+    {
+      "slug": "opal",
+      "nameKo": "오팔",
+      "nameEn": "Opal",
+      "summary": "설레는 마음으로 희망을 품고 싶을 때 어울리는 영롱한 원석이에요.",
+      "description": "오팔은 치유와 희망, 변화의 기운을 상징하는 원석으로 여겨져요. 방향을 잃은 듯한 마음에 작은 빛을 더하고 싶은 순간에 어울려요.",
+      "colorHex": "#DCE8E6",
+      "element": "METAL",
+      "imageUrl": "/images/jewelry/opal.png"
+    },
+    {
+      "slug": "topaz",
+      "nameKo": "토파즈",
+      "nameEn": "Topaz",
+      "summary": "다시 자신감을 채우고 싶을 때 어울리는 따뜻한 노란빛 원석이에요.",
+      "description": "토파즈는 따뜻함과 풍요, 자신감을 상징하는 원석으로 여겨져요. 스스로를 향한 믿음을 다시 채우고 싶은 순간에 어울려요.",
+      "colorHex": "#E8A33D",
+      "element": "EARTH",
+      "imageUrl": "/images/jewelry/topaz.png"
+    },
+    {
+      "slug": "onyx",
+      "nameKo": "오닉스",
+      "nameEn": "Onyx",
+      "summary": "마음을 단단히 지키고 싶을 때 곁에 두고 싶은 짙은 검은빛 원석이에요.",
+      "description": "오닉스는 굳건함과 보호, 안정을 상징하는 원석으로 여겨져 왔어요. 흔들리는 마음을 다잡고 중심을 지키고 싶은 순간에 어울려요.",
+      "colorHex": "#1C1C1C",
+      "element": "WATER",
+      "imageUrl": "/images/jewelry/onyx.png"
     }
   ]
 }

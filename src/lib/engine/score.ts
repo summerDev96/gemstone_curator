@@ -1,14 +1,9 @@
-import {
-  CURRENT_RULESET_VERSION,
-  REPEAT_PENALTY_MULTI_HIT,
-  REPEAT_PENALTY_ONE_HIT,
-  REPEAT_WINDOW,
-  normalizeWeights,
-} from "./weights";
+import { CURRENT_RULESET_VERSION, normalizeWeights } from "./weights";
 import type {
   EngineFiveElement,
   EngineStone,
   EngineStoneTag,
+  FiveElementSignal,
   RecommendationEngineInput,
   RecommendationEngineResult,
   StoneCandidateScore,
@@ -49,12 +44,35 @@ function elementAffinity(
   return 0;
 }
 
-function repeatPenalty(stoneId: string, recentStoneIds: string[]): number {
-  const window = recentStoneIds.slice(0, REPEAT_WINDOW);
-  const hits = window.filter((id) => id === stoneId).length;
-  if (hits === 0) return 1;
-  if (hits === 1) return REPEAT_PENALTY_ONE_HIT;
-  return REPEAT_PENALTY_MULTI_HIT;
+/** 보조 원소 친화도에 부여하는 비중. 주 원소(neededElement) 친화도가 나머지를 차지한다. */
+const SECONDARY_ELEMENT_WEIGHT = 0.3;
+
+/**
+ * 오행 친화도 결합 규칙:
+ * - 상대방의 필요 기운도 함께 제공된 경우(관계 원석에서 "우리의 원석"을 계산할 때)
+ *   두 사람의 주 원소 친화도 평균을 쓴다(docs/13 참조).
+ * - 그렇지 않고 보조 원소(secondaryNeededElement)가 제공된 경우("나의 원석"/
+ *   "상대방의 원석" 각자의 오행 진단), 주 원소가 같은 원석이 여럿이라 항상 동일한
+ *   원석(알파벳순 1등)으로 몰리는 문제를 줄이기 위해 보조 원소 친화도를 약하게 더한다.
+ */
+function combinedElementAffinity(
+  stoneElement: EngineFiveElement | null | undefined,
+  signal: FiveElementSignal,
+): number {
+  const primary = elementAffinity(stoneElement, signal.neededElement);
+  if (signal.partnerNeededElement) {
+    const partner = elementAffinity(stoneElement, signal.partnerNeededElement);
+    return (primary + partner) / 2;
+  }
+  if (!signal.secondaryNeededElement) return primary;
+  const secondary = elementAffinity(stoneElement, signal.secondaryNeededElement);
+  return primary * (1 - SECONDARY_ELEMENT_WEIGHT) + secondary * SECONDARY_ELEMENT_WEIGHT;
+}
+
+function requireFiveElementSignal(input: RecommendationEngineInput): void {
+  if (!input.fiveElement) {
+    throw new Error(`${input.context} 컨텍스트에는 fiveElement 신호가 필요합니다.`);
+  }
 }
 
 /**
@@ -69,51 +87,63 @@ export function recommend(
   if (stones.length === 0) {
     throw new Error("추천할 원석이 없습니다 (원석 카탈로그가 비어 있음).");
   }
-  if (input.context === "five-elements" && !input.fiveElement) {
-    throw new Error(
-      "five-elements 컨텍스트에는 fiveElement 신호가 필요합니다.",
-    );
+  if (input.context === "five-elements" || input.context === "partner-five-elements") {
+    requireFiveElementSignal(input);
+  }
+  if (input.context === "relationship" && !input.relationship) {
+    throw new Error("relationship 컨텍스트에는 relationship 신호가 필요합니다.");
   }
 
   const hasSecondaryWish = Boolean(input.wish.secondaryWishTagId);
-  const weights = normalizeWeights(input.context, hasSecondaryWish);
+  const hasFiveElement = Boolean(input.fiveElement);
+  const weights = normalizeWeights(input.context, {
+    secondaryWish: hasSecondaryWish,
+    fiveElement: hasFiveElement,
+  });
 
   const scored: StoneCandidateScore[] = stones.map((stone) => {
     const breakdown: Record<string, number> = {};
-    let rawScore = 0;
+    let score = 0;
 
-    breakdown.primaryWish =
-      weights.primaryWish *
-      affinity(stone.id, input.wish.primaryWishTagId, stoneTags);
-    rawScore += breakdown.primaryWish;
+    if (weights.primaryWish > 0) {
+      breakdown.primaryWish =
+        weights.primaryWish *
+        affinity(stone.id, input.wish.primaryWishTagId, stoneTags);
+      score += breakdown.primaryWish;
+    }
 
     if (hasSecondaryWish) {
       breakdown.secondaryWish =
         weights.secondaryWish *
         affinity(stone.id, input.wish.secondaryWishTagId, stoneTags);
-      rawScore += breakdown.secondaryWish;
+      score += breakdown.secondaryWish;
     }
 
-    breakdown.heart =
-      weights.heart * affinity(stone.id, input.wish.heartTagId, stoneTags);
-    rawScore += breakdown.heart;
+    if (weights.heart > 0) {
+      breakdown.heart =
+        weights.heart * affinity(stone.id, input.wish.heartTagId, stoneTags);
+      score += breakdown.heart;
+    }
 
     if (input.fiveElement) {
       breakdown.fiveElement =
         weights.fiveElement *
-        elementAffinity(stone.element, input.fiveElement.neededElement);
-      rawScore += breakdown.fiveElement;
+        combinedElementAffinity(stone.element, input.fiveElement);
+      score += breakdown.fiveElement;
     }
 
-    const penalty = repeatPenalty(stone.id, input.recentStoneIds);
-    const finalScore = rawScore * penalty;
+    if (input.relationship) {
+      breakdown.relationshipGoal =
+        weights.relationshipGoal *
+        affinity(stone.id, input.relationship.relationshipGoalTagId, stoneTags);
+      score += breakdown.relationshipGoal;
+    }
 
-    return { stoneId: stone.id, rawScore, finalScore, breakdown };
+    return { stoneId: stone.id, score, breakdown };
   });
 
   scored.sort((a, b) => {
-    if (b.finalScore !== a.finalScore) return b.finalScore - a.finalScore;
-    if (b.rawScore !== a.rawScore) return b.rawScore - a.rawScore;
+    if (b.score !== a.score) return b.score - a.score;
     const slugA = stones.find((s) => s.id === a.stoneId)!.slug;
     const slugB = stones.find((s) => s.id === b.stoneId)!.slug;
     return slugA.localeCompare(slugB);
@@ -123,7 +153,7 @@ export function recommend(
   return {
     stoneId: winner.stoneId,
     rulesetVersion: CURRENT_RULESET_VERSION,
-    finalScore: winner.finalScore,
+    score: winner.score,
     breakdown: winner.breakdown,
     candidates: scored.slice(0, 10),
   };

@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { StoneAvatar } from "@/components/ui/StoneAvatar";
 import { TrackView } from "@/components/TrackView";
 
 interface SharePayload {
   scope: string;
-  stone: { nameKo: string; nameEn: string; colorHex: string };
+  stone: { nameKo: string; nameEn: string; colorHex: string; imageUrl: string | null };
   summary: string;
 }
 
@@ -75,13 +76,12 @@ export function ShareView({ token }: { token: string }) {
       <TrackView event="share_link_viewed" />
       <p className="pb-6 text-lg font-semibold text-text-primary">원석 큐레이터</p>
 
-      <div
-        aria-hidden="true"
-        className="flex h-32 w-32 items-center justify-center rounded-full"
-        style={{ backgroundColor: `${stone.colorHex}33` }}
-      >
-        <div className="h-20 w-20 rounded-full" style={{ backgroundColor: stone.colorHex }} />
-      </div>
+      <StoneAvatar
+        imageUrl={stone.imageUrl}
+        colorHex={stone.colorHex}
+        alt={stone.nameKo}
+        size={128}
+      />
       <h1 className="pt-3 text-xl font-semibold text-text-primary">
         {stone.nameKo}
         <span className="pl-2 text-sm font-normal text-text-secondary">{stone.nameEn}</span>

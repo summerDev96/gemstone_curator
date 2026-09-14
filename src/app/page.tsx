@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { LandingCta } from "@/components/LandingCta";
 import { TrackView } from "@/components/TrackView";
@@ -11,11 +12,20 @@ export default function LandingPage() {
       </header>
 
       <section className="flex flex-1 flex-col items-center justify-center gap-6 py-8 text-center">
-        <div
-          aria-hidden="true"
-          className="flex h-40 w-40 items-center justify-center rounded-full bg-accent-primary/10 text-5xl"
-        >
-          💎
+        {/*
+          라리마(Larimar) 원석 사진. 출처: Wikimedia Commons, 촬영자 Vassil,
+          퍼블릭 도메인(저작권자가 조건 없이 공개) — 상업적 사용·저작자 표시 모두 불필요.
+          https://commons.wikimedia.org/wiki/File:Larimar.jpg
+        */}
+        <div className="h-40 w-40 overflow-hidden rounded-full bg-accent-primary/10">
+          <Image
+            src="/images/larimar.jpg"
+            alt="라리마 원석"
+            width={320}
+            height={320}
+            className="h-full w-full object-cover"
+            priority
+          />
         </div>
         <div className="flex flex-col gap-3">
           <h1 className="text-2xl font-semibold leading-snug text-text-primary">
@@ -33,22 +43,21 @@ export default function LandingPage() {
         <LandingCta />
       </div>
 
-      <section
-        aria-label="서비스 소개"
-        className="grid grid-cols-3 gap-3 py-8 text-center text-sm text-text-secondary"
-      >
-        <div className="rounded-[var(--radius-md)] border border-border-subtle p-3">
-          <p className="font-medium text-text-primary">소원</p>
-          <p>지금 바라는 것</p>
+      <section aria-label="서비스 소개" className="py-8">
+        <div className="flex items-center justify-center gap-2 text-sm font-medium text-text-primary">
+          <span>소원</span>
+          <span aria-hidden="true" className="text-text-secondary">
+            →
+          </span>
+          <span>오행</span>
+          <span aria-hidden="true" className="text-text-secondary">
+            →
+          </span>
+          <span>관계</span>
         </div>
-        <div className="rounded-[var(--radius-md)] border border-border-subtle p-3">
-          <p className="font-medium text-text-primary">오행</p>
-          <p>더 깊은 이해</p>
-        </div>
-        <div className="rounded-[var(--radius-md)] border border-border-subtle p-3">
-          <p className="font-medium text-text-primary">관계</p>
-          <p>소중한 인연</p>
-        </div>
+        <p className="pt-2 text-center text-sm text-text-secondary">
+          지금 바라는 마음부터 오행으로 더 깊이, 소중한 인연까지 순서대로 알아볼 수 있어요.
+        </p>
       </section>
 
       <footer className="flex flex-col gap-2 py-4 text-center text-xs text-text-secondary">

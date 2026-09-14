@@ -26,6 +26,7 @@ export async function GET(
           fiveElementProfile: { include: { integratedStone: true } },
         },
       },
+      relationshipAnalysis: { include: { weStone: true } },
     },
   });
 
@@ -42,12 +43,17 @@ export async function GET(
   });
 
   const isFiveElements = shareLink.scope === "five-elements";
-  const stone = isFiveElements
-    ? shareLink.recommendation.fiveElementProfile?.integratedStone
-    : shareLink.recommendation.stone;
-  const summary = isFiveElements
-    ? shareLink.recommendation.fiveElementProfile?.heartSummary
-    : shareLink.recommendation.heartSummary;
+  const isRelationship = shareLink.scope === "relationship";
+  const stone = isRelationship
+    ? shareLink.relationshipAnalysis?.weStone
+    : isFiveElements
+      ? shareLink.recommendation.fiveElementProfile?.integratedStone
+      : shareLink.recommendation.stone;
+  const summary = isRelationship
+    ? shareLink.relationshipAnalysis?.conversationPrompt
+    : isFiveElements
+      ? shareLink.recommendation.fiveElementProfile?.heartSummary
+      : shareLink.recommendation.heartSummary;
 
   if (!stone || !summary) {
     return apiError("NOT_FOUND", "공유할 결과를 찾을 수 없습니다.");

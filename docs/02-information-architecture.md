@@ -62,10 +62,7 @@ flowchart TD
 | S06 | `/result/[recommendationId]/five-elements/intro` | 오행 안내·동의 |
 | S07 | `/result/[recommendationId]/five-elements/birth-info` | 출생정보 입력 |
 | S08 | `/result/[recommendationId]/five-elements` | 오행 통합 결과 |
-| S09 | `/result/[recommendationId]/relationship/intro` | 관계 원석 안내 |
-| S10 | `/result/[recommendationId]/relationship/partner-info` | 상대방 정보 입력 |
-| S11 | `/result/[recommendationId]/relationship/wish` | 관계 소원 선택 |
-| S12 | `/result/[recommendationId]/relationship` | 관계 원석 결과 |
+| S09~S12 | `/result/[recommendationId]/relationship` | 관계 원석 안내부터 결과까지. **실제 구현은 4개 화면을 별도 라우트로 나누지 않고, 하나의 라우트에서 컴포넌트 내부 단계(`intro→form→loading→result`)로 전환한다**(`docs/13` 결정 참조). 원안의 개별 경로(`/relationship/intro`,`/relationship/partner-info`,`/relationship/wish`)는 만들지 않았다. |
 | S13 | `/share/[token]` | 공유 미리보기 (공개) |
 | S14 | `/library` | 보관함 및 개인정보 설정 — **실제 구현은 계정 없이 비회원 세션(로컬 저장소) 기준으로 동작**(원안은 "회원 전용"이었으나 `docs/13` 결정으로 변경) |
 | (실제 구현 추가) | `/privacy` | "내 데이터 삭제" 확인 화면. S14의 "개인정보 설정" 탭에서 링크로 연결되며 `DELETE /sessions/current`를 호출한다([07-api-specification.md](07-api-specification.md#delete-sessionscurrent) 참조). |
@@ -98,9 +95,9 @@ flowchart TD
 | S07 | 민감정보(생년월일시) 입력, 검증 |
 | S08 | 오행 통합 결과 소비 |
 | S09 | 관계 기능 가치 제안 |
-| S10 | 상대방 정보(별명 필수, 출생정보 선택) 입력 |
+| S10 | 상대방 정보(별명, 나의 출생정보(조건부), 상대방 출생정보 — 모두 필수) 입력 |
 | S11 | 관계 목표 신호 수집 |
-| S12 | 관계 원석 결과 소비, 초대 링크 생성 |
+| S12 | 관계 원석 결과 소비 |
 | S13 | 제3자에게 노출되는 개인정보 없는 공유 카드 |
 | S14 | 보관함 조회, 동의 관리, 데이터 삭제 |
 
@@ -117,7 +114,7 @@ flowchart TD
 - **결과 화면(S05, S08, S12) 딥링크**: 본인 세션/계정 소유자만 `recommendationId`로 직접 접근 가능. 소유하지 않은 사용자가 접근 시 404로 응답한다(존재 여부 노출 방지).
 - **공유 링크(S13)**: `POST /recommendations/{id}/share-links`로 발급된 공개 토큰은 소유권 검증 없이 누구나 조회 가능하나, payload는 개인정보가 제거된 요약본이다. 기본 만료 기간은 `추가 검증 필요`(권장 초기값: 30일, [13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조).
 - **만료/삭제된 링크**: `GET /shares/{token}`은 만료·철회된 토큰에 대해 410 Gone을 반환하고 S13은 "만료된 공유입니다" 상태를 노출한다.
-- **관계 초대 링크(S12)**: 별도 토큰 체계를 사용하며 상대방 전용 접근 흐름으로 연결된다(`추가 검증 필요`: 초대 링크 전용 화면 설계, Phase 3 상세화 필요).
+- **관계 초대 링크**: 한때 상대방이 별도 화면(`/relationship-invites/[token]`)에서 자신의 생년월일시를 나중에 채워 넣는 흐름이 있었으나, 상대방 출생정보가 필수 입력으로 바뀌면서 도달 불가능해져 제거했다([13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조). 결과를 상대방과 공유하려면 S13 공유 링크를 사용한다.
 
 ## Assumptions
 
@@ -127,5 +124,4 @@ flowchart TD
 ## 추가 검증 필요
 
 - 미완료 세션 재개(resume) 지원 여부
-- 공유 링크 기본 만료 기간
-- 관계 초대 링크의 상대방 전용 화면 URL 구조
+- ~~공유 링크 기본 만료 기간~~ → 구현값 30일로 확정([07-api-specification.md](07-api-specification.md#post-recommendationsidshare-links) 참조). 이 값의 법적 적정성 자체는 여전히 열려 있다([13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조).

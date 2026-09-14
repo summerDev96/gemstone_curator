@@ -1,0 +1,120 @@
+{
+  "_note": "docs/09-ai-prompts-and-safety.md 관계 결과 프롬프트의 fallback. '우리의 원석'(weStone) 기준으로 키를 매핑한다.",
+  "fallbackCopy": [
+    {
+      "stoneSlug": "rose-quartz",
+      "conversationPrompt": "요즘 서로에게 가장 고마웠던 순간은 언제였나요?",
+      "microAction": "이번 주 안에 서로에게 짧은 안부를 전해보세요."
+    },
+    {
+      "stoneSlug": "amethyst",
+      "conversationPrompt": "요즘 서로에게 차분히 나누고 싶은 이야기가 있나요?",
+      "microAction": "오늘 잠깐 시간을 내어 방해받지 않고 대화를 나눠보세요."
+    },
+    {
+      "stoneSlug": "clear-quartz",
+      "conversationPrompt": "서로에게 오해가 있었다면 어떤 부분이었을까요?",
+      "microAction": "궁금했던 것 하나를 솔직하게 물어보세요."
+    },
+    {
+      "stoneSlug": "green-aventurine",
+      "conversationPrompt": "이 관계에서 앞으로 함께 만들어가고 싶은 모습이 있나요?",
+      "microAction": "함께할 작은 계획 하나를 이번 주에 세워보세요."
+    },
+    {
+      "stoneSlug": "chalcedony",
+      "conversationPrompt": "요즘 서로에게 부드럽게 전하고 싶었던 말이 있나요?",
+      "microAction": "오늘 서로에게 다정한 말 한마디를 건네보세요."
+    },
+    {
+      "stoneSlug": "larimar",
+      "conversationPrompt": "요즘 함께 있을 때 마음이 편안했던 순간은 언제였나요?",
+      "microAction": "오늘 서로에게 여유로운 시간을 잠시 선물해보세요."
+    },
+    {
+      "stoneSlug": "aquamarine",
+      "conversationPrompt": "서로에게 솔직하게 털어놓고 싶은 이야기가 있나요?",
+      "microAction": "마음에 담아둔 이야기 하나를 편하게 꺼내보세요."
+    },
+    {
+      "stoneSlug": "amazonite",
+      "conversationPrompt": "요즘 서로에게 더 솔직해지고 싶은 부분이 있나요?",
+      "microAction": "오늘 하고 싶었던 말을 부드럽게 전해보세요."
+    },
+    {
+      "stoneSlug": "turquoise",
+      "conversationPrompt": "요즘 서로를 지켜주고 싶다고 느낀 순간이 있었나요?",
+      "microAction": "오늘 서로에게 든든한 응원의 말을 건네보세요."
+    },
+    {
+      "stoneSlug": "jade",
+      "conversationPrompt": "함께하는 시간 중 가장 편안했던 순간은 언제였나요?",
+      "microAction": "이번 주 함께 여유로운 시간을 보낼 계획을 세워보세요."
+    },
+    {
+      "stoneSlug": "jadeite",
+      "conversationPrompt": "서로에게 자신감을 준 순간이 있다면 언제였나요?",
+      "microAction": "서로의 좋은 점 한 가지를 이야기해보세요."
+    },
+    {
+      "stoneSlug": "prehnite",
+      "conversationPrompt": "요즘 서로에게 이해받고 싶었던 마음이 있나요?",
+      "microAction": "오늘 서로의 마음을 차분히 들어보는 시간을 가져보세요."
+    },
+    {
+      "stoneSlug": "strawberry-quartz",
+      "conversationPrompt": "요즘 서로에게 설렜던 작은 순간이 있었나요?",
+      "microAction": "오늘 서로에게 작은 다정함을 표현해보세요."
+    },
+    {
+      "stoneSlug": "lapis-lazuli",
+      "conversationPrompt": "서로에게 더 솔직하게 이야기하고 싶은 주제가 있나요?",
+      "microAction": "오늘 진지하게 나누고 싶었던 이야기를 꺼내보세요."
+    },
+    {
+      "stoneSlug": "garnet",
+      "conversationPrompt": "요즘 서로에게 힘이 되어준 순간은 언제였나요?",
+      "microAction": "서로에게 힘이 되는 응원의 말을 건네보세요."
+    },
+    {
+      "stoneSlug": "emerald",
+      "conversationPrompt": "이 관계에서 오래도록 지키고 싶은 모습이 있나요?",
+      "microAction": "함께 지켜가고 싶은 약속 하나를 이야기해보세요."
+    },
+    {
+      "stoneSlug": "pearl",
+      "conversationPrompt": "요즘 서로에게 표현하지 못한 고마움이 있나요?",
+      "microAction": "오늘 고마운 마음을 짧게 전해보세요."
+    },
+    {
+      "stoneSlug": "ruby",
+      "conversationPrompt": "서로에게 애정을 느꼈던 순간은 언제였나요?",
+      "microAction": "오늘 마음을 담아 애정 표현을 해보세요."
+    },
+    {
+      "stoneSlug": "peridot",
+      "conversationPrompt": "서로에게 새로 시작해보고 싶은 것이 있나요?",
+      "microAction": "함께 시도해볼 작은 일 하나를 정해보세요."
+    },
+    {
+      "stoneSlug": "sapphire",
+      "conversationPrompt": "서로에게 신뢰를 느꼈던 순간은 언제였나요?",
+      "microAction": "오늘 서로를 믿는다는 말을 건네보세요."
+    },
+    {
+      "stoneSlug": "opal",
+      "conversationPrompt": "함께 있으면서 새롭게 느낀 감정이 있었나요?",
+      "microAction": "요즘 느낀 감정을 서로에게 편하게 나눠보세요."
+    },
+    {
+      "stoneSlug": "topaz",
+      "conversationPrompt": "서로에게 자랑하고 싶은 점이 있다면 무엇인가요?",
+      "microAction": "서로의 좋은 점을 한 가지씩 말해보세요."
+    },
+    {
+      "stoneSlug": "onyx",
+      "conversationPrompt": "요즘 서로에게 든든함을 느꼈던 순간이 있었나요?",
+      "microAction": "오늘 서로에게 든든한 존재라고 말해보세요."
+    }
+  ]
+}

@@ -18,6 +18,7 @@ export const StoneSeedSchema = z.object({
   description: z.string().min(1),
   colorHex: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
   element: z.enum(["WOOD", "FIRE", "EARTH", "METAL", "WATER"]).optional(),
+  imageUrl: z.string().min(1).optional(),
 });
 
 export const StonesFileSchema = z.object({
@@ -44,4 +45,14 @@ export const FallbackCopySeedSchema = z.object({
 
 export const FallbackCopyFileSchema = z.object({
   fallbackCopy: z.array(FallbackCopySeedSchema).min(1),
+});
+
+export const RelationshipFallbackCopySeedSchema = z.object({
+  stoneSlug: z.string().min(1),
+  conversationPrompt: z.string().min(1).max(100),
+  microAction: z.string().min(1).max(100),
+});
+
+export const RelationshipFallbackCopyFileSchema = z.object({
+  fallbackCopy: z.array(RelationshipFallbackCopySeedSchema).min(1),
 });

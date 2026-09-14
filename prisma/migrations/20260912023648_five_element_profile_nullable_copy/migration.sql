@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "FiveElementProfile" ALTER COLUMN "comfortLines" DROP NOT NULL,
+ALTER COLUMN "heartSummary" DROP NOT NULL,
+ALTER COLUMN "microAction" DROP NOT NULL,
+ALTER COLUMN "modelName" DROP NOT NULL,
+ALTER COLUMN "promptVersion" DROP NOT NULL,
+ALTER COLUMN "rationale" DROP NOT NULL;

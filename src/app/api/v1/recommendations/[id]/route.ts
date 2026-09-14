@@ -20,6 +20,10 @@ export async function GET(
       stone: true,
       wishSession: true,
       fiveElementProfile: { include: { integratedStone: true } },
+      relationshipAnalyses: {
+        include: { myStone: true, partnerStone: true, weStone: true },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
 
@@ -51,6 +55,19 @@ export async function GET(
       }
     : null;
 
+  const relationships = recommendation.relationshipAnalyses.map((r) => ({
+    relationshipAnalysisId: r.id,
+    status: r.partnerStoneId ? "COMPLETED" : "PENDING_PARTNER",
+    myStone: { id: r.myStone.id, nameKo: r.myStone.nameKo, nameEn: r.myStone.nameEn, colorHex: r.myStone.colorHex, imageUrl: r.myStone.imageUrl },
+    partnerStone: r.partnerStone
+      ? { id: r.partnerStone.id, nameKo: r.partnerStone.nameKo, nameEn: r.partnerStone.nameEn, colorHex: r.partnerStone.colorHex, imageUrl: r.partnerStone.imageUrl }
+      : null,
+    weStone: { id: r.weStone.id, nameKo: r.weStone.nameKo, nameEn: r.weStone.nameEn, colorHex: r.weStone.colorHex, imageUrl: r.weStone.imageUrl },
+    conversationPrompt: r.conversationPrompt,
+    microAction: r.microAction,
+    usedFallback: r.usedFallback,
+  }));
+
   return NextResponse.json({
     id: recommendation.id,
     stone: {
@@ -68,5 +85,6 @@ export async function GET(
     usedFallback: recommendation.usedFallback,
     createdAt: recommendation.createdAt.toISOString(),
     fiveElements,
+    relationships,
   });
 }

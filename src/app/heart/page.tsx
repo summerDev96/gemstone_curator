@@ -8,7 +8,11 @@ import { HeartOptionList } from "@/components/heart/HeartOptionList";
 import { OptionalFreeTextArea } from "@/components/heart/OptionalFreeTextArea";
 import { TrackView } from "@/components/TrackView";
 import { apiFetch } from "@/lib/client/session";
-import { getWishFlowState, setWishFlowState } from "@/lib/client/wishFlowStore";
+import {
+  getWishFlowState,
+  setWishFlowState,
+  useWishFlowValue,
+} from "@/lib/client/wishFlowStore";
 import { track } from "@/lib/analytics/track";
 
 interface CatalogTag {
@@ -23,12 +27,8 @@ export default function HeartPage() {
   const router = useRouter();
   const [emotions, setEmotions] = useState<CatalogTag[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [heartId, setHeartId] = useState<string | null>(
-    () => getWishFlowState().heartTagId ?? null,
-  );
-  const [freeText, setFreeText] = useState(
-    () => getWishFlowState().freeText ?? "",
-  );
+  const heartId = useWishFlowValue("heartTagId") ?? null;
+  const freeText = useWishFlowValue("freeText") ?? "";
 
   useEffect(() => {
     if (!getWishFlowState().primaryWishTagId) {
@@ -47,7 +47,7 @@ export default function HeartPage() {
   }, []);
 
   function handleSelect(id: string) {
-    setHeartId(id);
+    setWishFlowState({ heartTagId: id });
     track("heart_selected", { tagId: id });
   }
 
@@ -93,7 +93,10 @@ export default function HeartPage() {
             value={heartId}
             onChange={handleSelect}
           />
-          <OptionalFreeTextArea value={freeText} onChange={setFreeText} />
+          <OptionalFreeTextArea
+            value={freeText}
+            onChange={(text) => setWishFlowState({ freeText: text })}
+          />
         </div>
       )}
 

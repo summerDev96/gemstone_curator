@@ -2,14 +2,16 @@
 
 - 문서 버전: 0.2.0
 - 최종 수정일: 2026-09-12 (Asia/Seoul)
-- 상태: Draft — 이 문서는 원본 설계이며, Phase 1~2 실제 구현과의 차이는 [11-implementation-roadmap.md](11-implementation-roadmap.md#실제-구현-참고-phase-1-착수-후-확정된-사항)에 기록한다.
+- 상태: Draft — 이 문서는 원본 설계이며, Phase 1~3 실제 구현과의 차이는 [11-implementation-roadmap.md](11-implementation-roadmap.md#실제-구현-참고-phase-1-착수-후-확정된-사항)에 기록한다.
 
 DB는 PostgreSQL, ORM은 Prisma(v7, `prisma.config.ts` + `@prisma/adapter-pg` 드라이버 어댑터 구조)를 사용한다. 시간은 모두 UTC로 저장하고 사용자 표시 시점에 Asia/Seoul로 변환한다. API 필드 매핑은 [07-api-specification.md](07-api-specification.md), 추천 엔진 타입과의 정합은 [08-recommendation-engine.md](08-recommendation-engine.md)를 참조한다. 정확한 패키지·DB 버전은 `추가 검증 필요`(lockfile에 고정, [13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조).
 
-**Phase 2 구현 시점의 실제 스키마 차이 (요약, 상세는 `prisma/schema.prisma`가 최종 근거)**:
-- `User` 모델은 아직 생성하지 않았다(계정/로그인 보류 결정, [13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조). `ConsentRecord`는 현재 `anonymousSessionId`만 가지며 `userId`는 계정 구현 시 추가 예정이다.
-- `FiveElementProfile`에는 원안에 없던 `isLeapMonth`(윤달 여부) 필드와, S08 결과 화면을 위한 `heartSummary`/`rationale`/`comfortLines`/`microAction`/`usedFallback`/`promptVersion`/`modelName` 카피 필드가 추가됐다(원안은 API 응답에 `rationale` 한 줄만 예시로 들었으나, `Recommendation`과 동일한 전체 카피 구조로 통일했다).
-- `ShareLink`는 아직 `RelationshipAnalysis`가 없어 `recommendationId`만 갖고(다형성 CHECK 제약 없음), 대신 `scope`(`"basic" | "five-elements"`) 문자열 컬럼으로 같은 `Recommendation`의 어느 결과를 공유하는지 구분한다. Phase 3에서 관계 결과 공유가 추가되면 원안의 다형성 구조로 재조정할 수 있다.
+**Phase 1~3 구현 시점의 실제 스키마 차이 (요약, 상세는 `prisma/schema.prisma`가 최종 근거)**:
+- `User` 모델은 아직 생성하지 않았다(계정/로그인을 만들지 않기로 확정, [13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조). `ConsentRecord`는 `anonymousSessionId`만 가지며 `userId`는 없다.
+- `FiveElementProfile`에는 원안에 없던 `isLeapMonth`(윤달 여부) 필드와, S08 결과 화면을 위한 `heartSummary`/`rationale`/`comfortLines`/`microAction`/`usedFallback`/`promptVersion`/`modelName` 카피 필드가 추가됐다(원안은 API 응답에 `rationale` 한 줄만 예시로 들었으나, `Recommendation`과 동일한 전체 카피 구조로 통일했다). **Phase 3에서 이 카피 필드들은 모두 nullable로 변경됐다**: 본인 오행(S08) 결과에서만 채워지고, 관계 원석(Phase 3)의 상대방 오행 프로필은 화면에 노출되는 별도 카피가 없어 LLM을 호출하지 않고 `null`로 남긴다(불필요한 LLM 호출 방지).
+- `ShareLink`는 `scope`(`"basic" | "five-elements" | "relationship"`) 문자열 컬럼으로 같은 `Recommendation`의 어느 결과를 공유하는지 구분하는 방식을 Phase 3까지 그대로 유지했다(원안의 다형성 CHECK 제약 대신). `relationshipAnalysisId`(nullable, `ON DELETE CASCADE`) 컬럼을 추가해 `scope === "relationship"`일 때만 채운다.
+- `RelationshipAnalysis`는 원안과 동일한 목적이지만 관계 유형(`relationshipType`)을 원석 점수화 신호로 쓰지 않는다([08-recommendation-engine.md](08-recommendation-engine.md#신호별-가중치-초기-휴리스틱-추가-검증-필요) 참조) — 스키마 컬럼 자체는 LLM 카피 맥락 입력 및 표시용으로 그대로 유지한다. `myStoneId`/`weStoneId`는 `ON DELETE RESTRICT`, `partnerStoneId`/`partnerFiveElementProfileId`는 `ON DELETE SET NULL`, `recommendationId`는 `ON DELETE CASCADE`다.
+- 원안의 `status`(`RelationshipStatus` enum: `PENDING_PARTNER`/`COMPLETED`) 컬럼은 구현하지 않았다. 한때 상대방 출생정보를 선택 입력으로 두고 `inviteTokenHash`(nullable, unique)/`inviteExpiresAt`(nullable) 컬럼으로 비동기 초대 흐름을 지원했으나, 상대방 출생정보를 필수로 바꾸면서(FR-REL-002) 초대 흐름 자체가 도달 불가능해져 두 컬럼과 관련 기능을 모두 제거했다(마이그레이션 `20260913232442_drop_relationship_invite`, [13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조). 이제 `partnerBirthProvided`는 요청 시점에 상대방 출생정보가 항상 함께 제출되므로 사실상 항상 `true`이고, `partnerStoneId`도 매 요청에서 항상 채워진다.
 
 ## 엔터티 목록 및 목적
 
@@ -186,15 +188,14 @@ erDiagram
 | `relationshipType` | `RelationshipType` (enum: `FAMILY`,`FRIEND`,`ROMANTIC`,`COLLEAGUE`,`OTHER`) | NOT NULL |
 | `relationshipGoalTagId` | `uuid` | FK → `Tag.id`, NOT NULL |
 | `partnerNicknameEncrypted` | `bytea` | NOT NULL — envelope encryption |
-| `partnerBirthProvided` | `boolean` | default `false` |
-| `partnerFiveElementProfileId` | `uuid` | FK → `FiveElementProfile.id`, nullable |
+| `partnerBirthProvided` | `boolean` | default `false` — 상대방 출생정보가 항상 필수로 바뀌면서 실제로는 항상 `true`(구현 참고) |
+| `partnerFiveElementProfileId` | `uuid` | FK → `FiveElementProfile.id`, nullable(스키마상 nullable이나 매 요청에서 항상 채워진다) |
 | `myStoneId` | `uuid` | FK → `Stone.id`, NOT NULL |
-| `partnerStoneId` | `uuid` | FK → `Stone.id`, nullable |
+| `partnerStoneId` | `uuid` | FK → `Stone.id`, nullable(스키마상 nullable이나 매 요청에서 항상 채워진다) |
 | `weStoneId` | `uuid` | FK → `Stone.id`, NOT NULL |
-| `inviteTokenHash` | `text` | UNIQUE, nullable |
-| `inviteExpiresAt` | `timestamptz` | nullable |
-| `status` | `RelationshipStatus` (enum: `PENDING_PARTNER`,`COMPLETED`) | default `PENDING_PARTNER` |
 | `createdAt` | `timestamptz` | - |
+
+`inviteTokenHash`/`inviteExpiresAt`/`status`(`RelationshipStatus`)는 초대 링크 기능과 함께 제거됐다(위 실제 구현 참고 참조).
 
 ### ConsentRecord
 
@@ -265,7 +266,7 @@ erDiagram
 ## 공유 토큰 해시 정책
 
 - 토큰은 발급 시 서버에서 암호학적으로 안전한 난수로 생성하고, 클라이언트에는 원문을 1회 응답으로만 전달한다.
-- DB에는 `SHA-256(token)` 해시만 `tokenHash`/`sessionTokenHash`/`inviteTokenHash` 컬럼에 저장한다.
+- DB에는 `SHA-256(token)` 해시만 `tokenHash`/`sessionTokenHash` 컬럼에 저장한다.
 - 조회 시 요청받은 토큰을 동일 방식으로 해시하여 비교한다(타이밍 공격 방지를 위한 상수시간 비교 적용, `추가 검증 필요`: 구현 라이브러리).
 
 ## 개인정보 최소수집 원칙
@@ -311,11 +312,6 @@ enum RelationshipType {
   ROMANTIC
   COLLEAGUE
   OTHER
-}
-
-enum RelationshipStatus {
-  PENDING_PARTNER
-  COMPLETED
 }
 
 enum ConsentType {
@@ -478,10 +474,7 @@ model RelationshipAnalysis {
   myStoneId                     String              @db.Uuid
   partnerStoneId                String?             @db.Uuid
   weStoneId                     String              @db.Uuid
-  inviteTokenHash                String?             @unique
-  inviteExpiresAt                 DateTime?
-  status                           RelationshipStatus  @default(PENDING_PARTNER)
-  createdAt                        DateTime            @default(now())
+  createdAt                     DateTime            @default(now())
 
   recommendation             Recommendation        @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
   relationshipGoalTag        Tag                    @relation("RelationshipGoal", fields: [relationshipGoalTagId], references: [id])
@@ -551,7 +544,6 @@ CREATE TYPE "FiveElement" AS ENUM ('WOOD','FIRE','EARTH','METAL','WATER');
 CREATE TYPE "CalendarType" AS ENUM ('SOLAR','LUNAR');
 CREATE TYPE "TagCategory" AS ENUM ('WISH','EMOTION','RELATIONSHIP_GOAL');
 CREATE TYPE "RelationshipType" AS ENUM ('FAMILY','FRIEND','ROMANTIC','COLLEAGUE','OTHER');
-CREATE TYPE "RelationshipStatus" AS ENUM ('PENDING_PARTNER','COMPLETED');
 CREATE TYPE "ConsentType" AS ENUM ('FIVE_ELEMENTS_BIRTH_INFO','RELATIONSHIP_PARTNER_INFO','TERMS_OF_SERVICE','PRIVACY_POLICY');
 
 CREATE TABLE "User" (
@@ -662,9 +654,6 @@ CREATE TABLE "RelationshipAnalysis" (
   "myStoneId" UUID NOT NULL REFERENCES "Stone"(id),
   "partnerStoneId" UUID REFERENCES "Stone"(id),
   "weStoneId" UUID NOT NULL REFERENCES "Stone"(id),
-  "inviteTokenHash" TEXT UNIQUE,
-  "inviteExpiresAt" TIMESTAMPTZ,
-  status "RelationshipStatus" NOT NULL DEFAULT 'PENDING_PARTNER',
   "createdAt" TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX ON "RelationshipAnalysis" ("recommendationId");
@@ -731,12 +720,13 @@ CREATE INDEX ON "ShareLink" ("expiresAt");
 
 - `WishSession`은 자유 입력 원문을 저장하지 않는 설계를 전제로 `freeTextProvided` boolean만 둔다.
 - `Recommendation.score`는 내부 관측 전용이며 API 응답에는 노출하지 않는 것으로 가정했다.
-- `RelationshipAnalysis`와 `ShareLink`는 다형 참조(추천 또는 관계결과 중 하나) 패턴을 애플리케이션+CHECK 제약으로 처리하는 것으로 가정했다.
+- ~~`RelationshipAnalysis`와 `ShareLink`는 다형 참조(추천 또는 관계결과 중 하나) 패턴을 애플리케이션+CHECK 제약으로 처리하는 것으로 가정했다.~~ → 실제로는 CHECK 제약 없이 `ShareLink.scope` 문자열 컬럼 + nullable FK(`relationshipAnalysisId`) 조합으로 구현했다(Phase 2/3 실제 구현 참고 섹션 참조).
 
 ## 추가 검증 필요
 
-- 인증 방식 확정에 따른 `User` 테이블 필드 조정(비밀번호 vs OAuth 전용)
-- `AnonymousSession`/`ShareLink` 만료 배치 주기 및 구현 방식
-- envelope encryption에 사용할 KMS/라이브러리 선택
-- `ConsentRecord` 법정 보유기간
+- `ConsentRecord` 법정 보유기간(법무 확인 필요, [13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조)
 - 원석-태그(`StoneTag`) 시드 데이터의 전문가 검수
+- envelope encryption KEK의 실제 KMS 이전([13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조 — 암호화 알고리즘/라이브러리 자체는 AES-256-GCM(`node:crypto`)으로 이미 확정·구현됨)
+- `AnonymousSession`/`ShareLink` 만료 배치를 실제 운영 스케줄러(cron 등)에 연결하는 인프라 작업(배치 스크립트 자체는 `npm run cleanup:sessions`로 구현됨, [13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조)
+
+~~인증 방식 확정에 따른 `User` 테이블 필드 조정~~ → 계정/로그인 기능을 만들지 않기로 확정되어 `User` 테이블 자체가 없다([13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조).

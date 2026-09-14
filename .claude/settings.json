@@ -1,0 +1,44 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -pe 'const p=JSON.parse\\(require\\(\"fs\"\\).readFileSync\\(0,\"utf8\"\\)\\); JSON.stringify\\({dep:p.dependencies?.dotenv, dev:p.devDependencies?.dotenv}\\)')",
+      "Bash(npx tsx *)",
+      "Bash(node -e ' *)",
+      "Bash(sed -i '' \"s/require\\('playwright'\\)/require\\('@playwright\\\\/test'\\)/\" _tmp_screenshot.js)",
+      "Bash(node _tmp_screenshot.js)",
+      "WebSearch",
+      "WebFetch(domain:commons.wikimedia.org)",
+      "Bash(curl -sL -A \"Mozilla/5.0\" -o /private/tmp/claude-501/-Users-sum-develop-gemstonecurator/44019fc4-a95a-411d-ae3b-e6f8b9321f9f/scratchpad/larimar_full.jpg \"https://upload.wikimedia.org/wikipedia/commons/a/ae/Larimar_hg.jpg\")",
+      "Bash(sips -Z 500 larimar_full.jpg --out larimar_preview.jpg)",
+      "Bash(curl -sL -A \"Mozilla/5.0\" -o larimar_poli_full.jpg \"https://upload.wikimedia.org/wikipedia/commons/7/79/Larimar_poli_%28R%C3%A9publique_Dominicaine%29.JPG\")",
+      "Bash(sips -Z 500 larimar_poli_full.jpg --out larimar_poli_preview.jpg)",
+      "Bash(curl -sL -A \"Mozilla/5.0\" -o larimar_vassil.jpg \"https://upload.wikimedia.org/wikipedia/commons/4/4b/Larimar.jpg\")",
+      "Bash(sips -c 787 787 larimar_vassil.jpg --out larimar_square.jpg)",
+      "Bash(sips -Z 640 larimar_square.jpg --out larimar_final.jpg)",
+      "Bash(sips -s formatOptions 80 larimar_final.jpg --out larimar_final.jpg)",
+      "Bash(rm -f /private/tmp/claude-501/-Users-sum-develop-gemstonecurator/44019fc4-a95a-411d-ae3b-e6f8b9321f9f/scratchpad/larimar_*.jpg /private/tmp/claude-501/-Users-sum-develop-gemstonecurator/44019fc4-a95a-411d-ae3b-e6f8b9321f9f/scratchpad/landing2.png)",
+      "Bash(python3 crop.py aqua3.jpg aquamarine.jpg 256 280 150 640)",
+      "Bash(sips -Z 400 aquamarine.jpg --out aqua_check.jpg)",
+      "Bash(/tmp/wm_search.sh \"amazonite tumbled ring necklace\")",
+      "Bash(/tmp/wm_search.sh \"amazonite cabochon jewelry\")",
+      "Bash(/tmp/wm_search.sh \"amazonite\")",
+      "Bash(curl -sL -A \"Mozilla/5.0\" -o amaz1.jpg \"https://upload.wikimedia.org/wikipedia/commons/8/80/Amazonite_%282931684623%29.jpg\")",
+      "Bash(sips -Z 400 amaz1.jpg --out amaz1_p.jpg)",
+      "Bash(/tmp/wm_search.sh \"amazonite tumbled polished\")",
+      "Bash(/tmp/wm_search.sh \"amazonite beads\")",
+      "Bash(curl -sL -A \"Mozilla/5.0\" -o amaz2.jpg \"https://upload.wikimedia.org/wikipedia/commons/7/70/Amazonite_-_Variety_of_Microcline.jpg\")",
+      "Bash(sips -Z 400 amaz2.jpg --out amaz2_p.jpg)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 crop.py amaz2.jpg amazonite.jpg 640 500 500 640)",
+      "Bash(sips -Z 400 amazonite.jpg --out amaz_check.jpg)",
+      "Bash(/tmp/wm_search.sh \"turquoise ring silver jewelry\")",
+      "Bash(/tmp/wm_search.sh \"turquoise necklace jewelry\")",
+      "Bash(/tmp/wm_search.sh \"Navajo turquoise ring\")",
+      "Bash(curl -sL -A \"Mozilla/5.0\" -o turq1.jpg \"https://upload.wikimedia.org/wikipedia/commons/c/cf/American_-_Necklace_with_Turquoise_-_Walters_57992_-_Detail.jpg\")",
+      "Bash(sips -Z 400 turq1.jpg --out turq1_p.jpg)"
+    ],
+    "additionalDirectories": [
+      "/private/tmp/claude-501/-Users-sum-develop-gemstonecurator/44019fc4-a95a-411d-ae3b-e6f8b9321f9f/scratchpad"
+    ]
+  }
+}

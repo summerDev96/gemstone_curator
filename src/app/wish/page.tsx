@@ -7,7 +7,7 @@ import { PrimaryButton } from "@/components/ui/PrimaryButton";
 import { TagChipGroup, type TagOption } from "@/components/ui/TagChipGroup";
 import { TrackView } from "@/components/TrackView";
 import { apiFetch } from "@/lib/client/session";
-import { getWishFlowState, setWishFlowState } from "@/lib/client/wishFlowStore";
+import { setWishFlowState, useWishFlowValue } from "@/lib/client/wishFlowStore";
 import { track } from "@/lib/analytics/track";
 
 interface CatalogTag {
@@ -20,12 +20,8 @@ export default function WishPage() {
   const router = useRouter();
   const [wishes, setWishes] = useState<CatalogTag[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [primaryId, setPrimaryId] = useState<string | null>(
-    () => getWishFlowState().primaryWishTagId ?? null,
-  );
-  const [secondaryId, setSecondaryId] = useState<string | null>(
-    () => getWishFlowState().secondaryWishTagId ?? null,
-  );
+  const primaryId = useWishFlowValue("primaryWishTagId") ?? null;
+  const secondaryId = useWishFlowValue("secondaryWishTagId") ?? null;
 
   useEffect(() => {
     apiFetch("/api/v1/catalog/wishes")
@@ -41,14 +37,16 @@ export default function WishPage() {
     wishes?.map((w) => ({ id: w.id, label: w.labelKo })) ?? [];
 
   function handlePrimarySelect(id: string) {
-    setPrimaryId(id);
-    if (secondaryId === id) setSecondaryId(null);
+    setWishFlowState({
+      primaryWishTagId: id,
+      secondaryWishTagId: secondaryId === id ? undefined : secondaryId ?? undefined,
+    });
     track("wish_primary_selected", { tagId: id });
   }
 
   function handleSecondarySelect(id: string) {
-    const next = secondaryId === id ? null : id;
-    setSecondaryId(next);
+    const next = secondaryId === id ? undefined : id;
+    setWishFlowState({ secondaryWishTagId: next });
     if (next) track("wish_secondary_selected", { tagId: next });
   }
 

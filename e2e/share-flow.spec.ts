@@ -8,6 +8,8 @@ test("공유 링크를 생성하고 공개 페이지에서 개인정보 없이 �
   page,
   context,
 }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+
   await page.goto("/wish");
   await waitForCatalogLoaded(page);
   await page.locator("fieldset label").first().click();
@@ -21,11 +23,9 @@ test("공유 링크를 생성하고 공개 페이지에서 개인정보 없이 �
   await page.waitForURL(/\/result\/(?!new)/, { timeout: 30_000 });
   await expect(page.getByText("마음 요약")).toBeVisible({ timeout: 30_000 });
 
-  await page.getByRole("button", { name: "결과 공유하기" }).click();
-  const linkLocator = page.getByText(/^http/);
-  await expect(linkLocator).toBeVisible({ timeout: 10_000 });
-  const linkText = await linkLocator.textContent();
-  const url = linkText?.replace("링크가 복사됐어요: ", "").trim();
+  await page.getByRole("button", { name: "공유하기" }).click();
+  await expect(page.getByText("링크가 복사됐어요")).toBeVisible({ timeout: 10_000 });
+  const url = await page.evaluate(() => navigator.clipboard.readText());
   expect(url).toBeTruthy();
 
   // 별도 시크릿 컨텍스트(비회원 세션 없음)로 공개 링크 접근

@@ -1,6 +1,8 @@
 import {
   GeneratedRecommendationCopySchema,
+  RelationshipCopySchema,
   type GeneratedRecommendationCopy,
+  type RelationshipCopy,
 } from "./schema";
 
 /**
@@ -31,41 +33,32 @@ export type ValidationFailureReason =
   | "schema_violation"
   | "stone_name_mismatch";
 
+export interface ValidateOptions {
+  confirmedStoneNames: string[];
+  otherStoneNames: string[];
+}
+
+function checkTextSafety(
+  texts: string[],
+  options: ValidateOptions,
+): ValidationFailureReason | null {
+  const allText = texts.join(" ");
+  if (FORBIDDEN_PATTERNS.some((pattern) => pattern.test(allText))) {
+    return "forbidden_phrase";
+  }
+  const mentionsOther = options.otherStoneNames
+    .filter((name) => !options.confirmedStoneNames.includes(name))
+    .some((name) => name.length >= 2 && allText.includes(name));
+  if (mentionsOther) {
+    return "stone_name_mismatch";
+  }
+  return null;
+}
+
 export interface ValidationResult {
   valid: boolean;
   reason?: ValidationFailureReason;
   data?: GeneratedRecommendationCopy;
-}
-
-function containsForbiddenPhrase(copy: GeneratedRecommendationCopy): boolean {
-  const allText = [
-    copy.heartSummary,
-    copy.rationale,
-    ...copy.comfortLines,
-    copy.microAction,
-  ].join(" ");
-  return FORBIDDEN_PATTERNS.some((pattern) => pattern.test(allText));
-}
-
-function mentionsOtherStoneName(
-  copy: GeneratedRecommendationCopy,
-  confirmedStoneNames: string[],
-  otherStoneNames: string[],
-): boolean {
-  const allText = [
-    copy.heartSummary,
-    copy.rationale,
-    ...copy.comfortLines,
-    copy.microAction,
-  ].join(" ");
-  return otherStoneNames
-    .filter((name) => !confirmedStoneNames.includes(name))
-    .some((name) => name.length >= 2 && allText.includes(name));
-}
-
-export interface ValidateOptions {
-  confirmedStoneNames: string[];
-  otherStoneNames: string[];
 }
 
 export function validateGeneratedCopy(
@@ -77,19 +70,35 @@ export function validateGeneratedCopy(
     return { valid: false, reason: "schema_violation" };
   }
 
-  if (containsForbiddenPhrase(parsed.data)) {
-    return { valid: false, reason: "forbidden_phrase" };
+  const reason = checkTextSafety(
+    [parsed.data.heartSummary, parsed.data.rationale, ...parsed.data.comfortLines, parsed.data.microAction],
+    options,
+  );
+  if (reason) return { valid: false, reason };
+
+  return { valid: true, data: parsed.data };
+}
+
+export interface RelationshipValidationResult {
+  valid: boolean;
+  reason?: ValidationFailureReason;
+  data?: RelationshipCopy;
+}
+
+export function validateRelationshipCopy(
+  raw: unknown,
+  options: ValidateOptions,
+): RelationshipValidationResult {
+  const parsed = RelationshipCopySchema.safeParse(raw);
+  if (!parsed.success) {
+    return { valid: false, reason: "schema_violation" };
   }
 
-  if (
-    mentionsOtherStoneName(
-      parsed.data,
-      options.confirmedStoneNames,
-      options.otherStoneNames,
-    )
-  ) {
-    return { valid: false, reason: "stone_name_mismatch" };
-  }
+  const reason = checkTextSafety(
+    [parsed.data.conversationPrompt, parsed.data.microAction],
+    options,
+  );
+  if (reason) return { valid: false, reason };
 
   return { valid: true, data: parsed.data };
 }

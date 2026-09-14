@@ -18,8 +18,17 @@ export const FeedbackRequestSchema = z.object({
 
 export type FeedbackRequest = z.infer<typeof FeedbackRequestSchema>;
 
-export const ShareLinkRequestSchema = z.object({
-  scope: z.enum(["basic", "five-elements"]),
-});
+export const ShareLinkRequestSchema = z
+  .object({
+    scope: z.enum(["basic", "five-elements", "relationship"]),
+    relationshipAnalysisId: z.string().uuid().optional(),
+  })
+  .refine(
+    (data) => data.scope !== "relationship" || Boolean(data.relationshipAnalysisId),
+    {
+      message: "scope가 relationship이면 relationshipAnalysisId가 필요합니다.",
+      path: ["relationshipAnalysisId"],
+    },
+  );
 
 export type ShareLinkRequest = z.infer<typeof ShareLinkRequestSchema>;

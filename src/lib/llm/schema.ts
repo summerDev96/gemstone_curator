@@ -31,3 +31,21 @@ export const GENERATED_RECOMMENDATION_COPY_JSON_SCHEMA = {
     microAction: { type: "string", minLength: 1, maxLength: 100 },
   },
 } as const;
+
+/** docs/09-ai-prompts-and-safety.md#관계-결과-프롬프트 */
+export const RelationshipCopySchema = z.object({
+  conversationPrompt: z.string().min(1).max(100),
+  microAction: z.string().min(1).max(100),
+});
+
+export type RelationshipCopy = z.infer<typeof RelationshipCopySchema>;
+
+export const RELATIONSHIP_COPY_JSON_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["conversationPrompt", "microAction"],
+  properties: {
+    conversationPrompt: { type: "string", minLength: 1, maxLength: 100 },
+    microAction: { type: "string", minLength: 1, maxLength: 100 },
+  },
+} as const;

@@ -141,16 +141,12 @@ describe("recommend (partner-five-elements 컨텍스트)", () => {
     ).toThrow();
   });
 
-  it("주 원소가 같은 원석이 여럿이면 보조 원소로 세분화한다(같은 원소 항상 같은 원석으로 몰리는 문제 방지)", () => {
-    // 두 원석 모두 METAL(주 원소 1.0 동점)이지만, "zzz-metal-fire-boost"는 보조
-    // 태그 없이도 오행 신호만으로 앞서야 한다 — 여기서는 STONE의 element만으로는
-    // 보조 원소 구분이 불가능하므로(원석 하나에 원소 하나), 대신 METAL 그룹 중
-    // 알파벳순이 아닌 실제 존재하는 유일한 METAL 원석이 선택되는지를 확인한다.
+  it("주 원소가 같은 원석이 여럿이면 slug 알파벳순으로 결정론적으로 선택한다", () => {
     const stones: EngineStone[] = [
       { id: "s-a-metal", slug: "aaa-metal", element: "METAL" },
       { id: "s-z-metal", slug: "zzz-metal", element: "METAL" },
     ];
-    const withoutSecondaryTie = recommend(
+    const result = recommend(
       {
         context: "partner-five-elements",
         wish: {},
@@ -159,26 +155,6 @@ describe("recommend (partner-five-elements 컨텍스트)", () => {
       stones,
       [],
     );
-    // 보조 원소가 없으면 둘 다 완전 동점 → 알파벳순 1등(aaa-metal).
-    expect(withoutSecondaryTie.stoneId).toBe("s-a-metal");
-  });
-
-  it("보조 원소를 상생하는 원석이 있으면 주 원소만 일치하는 원석보다 우선한다", () => {
-    const stones: EngineStone[] = [
-      { id: "s-metal-only", slug: "zzz-metal-only", element: "METAL" },
-      { id: "s-wood-generates-fire", slug: "aaa-wood", element: "WOOD" },
-    ];
-    const result = recommend(
-      {
-        context: "partner-five-elements",
-        wish: {},
-        fiveElement: { neededElement: "FIRE", secondaryNeededElement: "EARTH" },
-      },
-      stones,
-      [],
-    );
-    // s-metal-only: 원소 불일치(0). s-wood-generates-fire: 주 원소 상생(0.5)*0.7=0.35
-    // → 알파벳순과 무관하게 오행 친화도가 실제로 있는 원석이 이긴다.
-    expect(result.stoneId).toBe("s-wood-generates-fire");
+    expect(result.stoneId).toBe("s-a-metal");
   });
 });

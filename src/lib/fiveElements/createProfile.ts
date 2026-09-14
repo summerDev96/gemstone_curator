@@ -75,10 +75,7 @@ export async function createFiveElementProfileForRecommendation({
         secondaryWishTagId: wishSession.secondaryWishTagId ?? undefined,
         heartTagId: wishSession.heartTagId,
       },
-      fiveElement: {
-        neededElement: fiveElements.neededElement,
-        secondaryNeededElement: fiveElements.secondaryNeededElement,
-      },
+      fiveElement: { neededElement: fiveElements.neededElement },
     },
     stones.map((s) => ({ id: s.id, slug: s.slug, element: s.element })),
     stoneTags,

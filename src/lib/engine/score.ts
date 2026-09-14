@@ -44,29 +44,19 @@ function elementAffinity(
   return 0;
 }
 
-/** 보조 원소 친화도에 부여하는 비중. 주 원소(neededElement) 친화도가 나머지를 차지한다. */
-const SECONDARY_ELEMENT_WEIGHT = 0.3;
-
 /**
- * 오행 친화도 결합 규칙:
- * - 상대방의 필요 기운도 함께 제공된 경우(관계 원석에서 "우리의 원석"을 계산할 때)
- *   두 사람의 주 원소 친화도 평균을 쓴다(docs/13 참조).
- * - 그렇지 않고 보조 원소(secondaryNeededElement)가 제공된 경우("나의 원석"/
- *   "상대방의 원석" 각자의 오행 진단), 주 원소가 같은 원석이 여럿이라 항상 동일한
- *   원석(알파벳순 1등)으로 몰리는 문제를 줄이기 위해 보조 원소 친화도를 약하게 더한다.
+ * 상대방의 필요 기운도 함께 제공된 경우(관계 원석에서 상대방 생년월일시를
+ * 입력했거나, 초대 응답으로 나중에 확보된 경우) 두 사람의 친화도 평균을 쓴다.
+ * docs/13-decisions-and-open-questions.md 참조.
  */
 function combinedElementAffinity(
   stoneElement: EngineFiveElement | null | undefined,
   signal: FiveElementSignal,
 ): number {
-  const primary = elementAffinity(stoneElement, signal.neededElement);
-  if (signal.partnerNeededElement) {
-    const partner = elementAffinity(stoneElement, signal.partnerNeededElement);
-    return (primary + partner) / 2;
-  }
-  if (!signal.secondaryNeededElement) return primary;
-  const secondary = elementAffinity(stoneElement, signal.secondaryNeededElement);
-  return primary * (1 - SECONDARY_ELEMENT_WEIGHT) + secondary * SECONDARY_ELEMENT_WEIGHT;
+  const mine = elementAffinity(stoneElement, signal.neededElement);
+  if (!signal.partnerNeededElement) return mine;
+  const partner = elementAffinity(stoneElement, signal.partnerNeededElement);
+  return (mine + partner) / 2;
 }
 
 function requireFiveElementSignal(input: RecommendationEngineInput): void {

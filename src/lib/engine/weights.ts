@@ -26,9 +26,8 @@ const WEIGHT_TABLE: Record<EngineContext, ContextWeights> = {
   basic: { ...ZERO, primaryWish: 0.5, secondaryWish: 0.15, heart: 0.35 },
   // "나의 원석"(개인 오행 진단)은 소원/감정과 섞으면 같은 생년월일이라도 그날 고른
   // 소원/감정에 따라 결과가 달라져 "사주 기반 진단"으로서의 안정성이 떨어진다는
-  // 문제가 있었다. 오행 친화도만으로 정하도록 바꾸고(아래 partner-five-elements와
-  // 동일), 대신 보조 원소(secondaryNeededElement)로 원석 후보를 더 세분화한다
-  // (docs/13 참조). 소원/감정은 여전히 결과 화면의 LLM 카피 맥락으로만 쓰인다.
+  // 문제가 있었다. 오행 친화도만으로 정하도록 바꿨다(아래 partner-five-elements와
+  // 동일, docs/13 참조). 소원/감정은 여전히 결과 화면의 LLM 카피 맥락으로만 쓰인다.
   "five-elements": { ...ZERO, fiveElement: 1 },
   // docs/08 원안은 relationshipType(0.10)도 별도 신호로 뒀으나, 원석과 관계 유형을
   // 잇는 근거 있는 매핑을 정의할 수 없어 제외했다(대신 LLM 카피의 맥락으로만 사용).

@@ -131,10 +131,7 @@ export async function POST(
     {
       context: "partner-five-elements",
       wish: {},
-      fiveElement: {
-        neededElement: partnerElements.neededElement,
-        secondaryNeededElement: partnerElements.secondaryNeededElement,
-      },
+      fiveElement: { neededElement: partnerElements.neededElement },
     },
     engineStones,
     engineStoneTags,

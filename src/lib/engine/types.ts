@@ -16,13 +16,6 @@ export interface WishSignal {
 export interface FiveElementSignal {
   neededElement: EngineFiveElement;
   /**
-   * "five-elements"/"partner-five-elements" 컨텍스트(본인/상대방 각자의 원석)에서
-   * 사용하는 보조 판별 신호. neededElement만으로는 같은 원소를 필요로 하는 원석이
-   * 여럿일 때 항상 동일한 원석(알파벳순 1등)으로 몰리는 문제가 있어, 두 번째로
-   * 필요한 원소도 약한 가중치로 함께 반영한다(docs/13 참조).
-   */
-  secondaryNeededElement?: EngineFiveElement;
-  /**
    * "relationship" 컨텍스트에서 상대방도 생년월일시를 제공한 경우, 상대방의 필요
    * 기운도 함께 반영해 "우리의 원석"이 두 사람 모두를 고려하도록 한다(선택).
    */

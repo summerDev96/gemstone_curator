@@ -73,45 +73,18 @@ describe("recommend (ENGINE-05: 오행 친화도, five-elements 컨텍스트)", 
     expect(result.stoneId).toBe("s-match");
   });
 
-  it("주 원소가 같은 원석이 여럿이면 보조 원소 친화도로 더 세분화한다", () => {
-    // WOOD generates FIRE → FIRE가 보조 원소면 WOOD 원석이 METAL 원석보다 앞선다.
-    const stones: EngineStone[] = [
-      { id: "s-metal", slug: "aaa-metal", element: "METAL" }, // 주 원소만 일치(1.0)
-      { id: "s-wood", slug: "zzz-wood", element: "WOOD" }, // 주 원소 불일치(0) + 보조 원소 상생(0.5)
-    ];
-    const result = recommend(
-      {
-        context: "five-elements",
-        wish: {},
-        fiveElement: { neededElement: "METAL", secondaryNeededElement: "FIRE" },
-      },
-      stones,
-      [],
-    );
-    // s-metal: 1.0*0.7 = 0.7, s-wood: 0*0.7 + 0.5*0.3 = 0.15 → s-metal 승리
-    expect(result.stoneId).toBe("s-metal");
-    expect(result.breakdown.fiveElement).toBeCloseTo(0.7, 5);
-  });
-
-  it("주 원소가 동점인 원석들 사이에서는 보조 원소 일치가 알파벳 동점 처리보다 우선한다", () => {
+  it("주 원소가 같은 원석이 여럿이면 slug 알파벳순으로 결정론적으로 선택한다", () => {
+    // 원석은 오행 속성을 하나만 가지므로, 같은 원소를 공유하는 원석들은 오행
+    // 친화도가 완전히 동일하다 — 이 동점은 기존 동점 처리 규칙(알파벳순)을 따른다.
     const stones: EngineStone[] = [
       { id: "s-a", slug: "aaa", element: "METAL" },
       { id: "s-z", slug: "zzz", element: "METAL" },
     ];
-    const stoneTags: EngineStoneTag[] = [
-      { stoneId: "s-z", tagId: "goal-placeholder", weight: 0 }, // 태그 영향 없음, 원소만으로 판단
-    ];
     const result = recommend(
-      {
-        context: "five-elements",
-        wish: {},
-        fiveElement: { neededElement: "METAL", secondaryNeededElement: "WATER" },
-      },
+      { context: "five-elements", wish: {}, fiveElement: { neededElement: "METAL" } },
       stones,
-      stoneTags,
+      [],
     );
-    // 둘 다 METAL이라 주 원소(1.0)와 보조 원소(METAL이 WATER를 상생하므로 0.5)
-    // 점수가 완전히 동일 → 여전히 동점이므로 알파벳순으로 결정된다.
     expect(result.stoneId).toBe("s-a");
   });
 

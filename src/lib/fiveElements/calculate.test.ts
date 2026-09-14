@@ -112,22 +112,4 @@ describe("calculateFiveElements", () => {
     const minValue = Math.min(...Object.values(result.balance));
     expect(result.balance[result.neededElement]).toBeCloseTo(minValue, 5);
   });
-
-  it("secondaryNeededElement는 neededElement를 제외한 나머지 중 가장 낮은 값을 가진 원소다", () => {
-    const result = calculateFiveElements({
-      calendarType: "SOLAR",
-      year: 2010,
-      month: 9,
-      day: 3,
-      birthTimeUnknown: false,
-      hour: 5,
-      minute: 45,
-    });
-    expect(result.secondaryNeededElement).not.toBe(result.neededElement);
-    const rest = Object.entries(result.balance).filter(
-      ([el]) => el !== result.neededElement,
-    );
-    const minValue = Math.min(...rest.map(([, v]) => v));
-    expect(result.balance[result.secondaryNeededElement]).toBeCloseTo(minValue, 5);
-  });
 });

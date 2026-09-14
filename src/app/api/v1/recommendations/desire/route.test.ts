@@ -1,6 +1,11 @@
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { prisma } from "@/lib/db";
+import { createMockLLMProvider } from "@/lib/llm/testUtils";
 import { POST as issueSession } from "../../sessions/route";
+
+vi.mock("@/lib/llm/getProvider", () => ({
+  getLLMProvider: () => createMockLLMProvider(),
+}));
 
 const { POST: postDesire } = await import("./route");
 
@@ -27,13 +32,13 @@ describe("POST /api/v1/recommendations/desire", () => {
     await prisma.$disconnect();
   });
 
-  it("사랑을 선택하면 매핑 표에 등록된 원석들을 순서대로 반환한다", async () => {
+  it("사랑을 선택하면 매핑 표 순서상 1등 원석을 topStone으로, 나머지를 otherStones로 반환한다", async () => {
     const token = await getSessionToken();
     const res = await callDesire(token, { desire: "love" });
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.stones.map((s: { slug: string }) => s.slug)).toEqual([
-      "turquoise",
+    expect(body.topStone.slug).toBe("turquoise");
+    expect(body.otherStones.map((s: { slug: string }) => s.slug)).toEqual([
       "amazonite",
       "lapis-lazuli",
       "sapphire",
@@ -48,17 +53,31 @@ describe("POST /api/v1/recommendations/desire", () => {
     const romanceRes = await callDesire(token, { desire: "romance" });
     const love = await loveRes.json();
     const romance = await romanceRes.json();
-    expect(romance.stones.map((s: { slug: string }) => s.slug)).toEqual(
-      love.stones.map((s: { slug: string }) => s.slug),
+    expect(romance.topStone.slug).toBe(love.topStone.slug);
+    expect(romance.otherStones.map((s: { slug: string }) => s.slug)).toEqual(
+      love.otherStones.map((s: { slug: string }) => s.slug),
     );
+  });
+
+  it("topStone에는 마음 요약/추천 이유/위로의 말/오늘의 작은 행동이 포함된다", async () => {
+    const token = await getSessionToken();
+    const res = await callDesire(token, { desire: "study" });
+    const body = await res.json();
+    expect(body.topStone.slug).toBe("lapis-lazuli");
+    expect(body.topStone.heartSummary).toBeTruthy();
+    expect(body.topStone.rationale).toBeTruthy();
+    expect(body.topStone.comfortLines.length).toBeGreaterThan(0);
+    expect(body.topStone.microAction).toBeTruthy();
+    expect(body.otherStones).toEqual([]);
   });
 
   it("응답에는 개인정보가 없고 원석 상세 정보만 포함된다", async () => {
     const token = await getSessionToken();
     const res = await callDesire(token, { desire: "protection" });
     const body = await res.json();
-    expect(body.stones.length).toBeGreaterThan(0);
-    for (const stone of body.stones) {
+    expect(body.topStone).toHaveProperty("nameKo");
+    expect(body.topStone).toHaveProperty("colorHex");
+    for (const stone of body.otherStones) {
       expect(stone).toHaveProperty("nameKo");
       expect(stone).toHaveProperty("colorHex");
     }

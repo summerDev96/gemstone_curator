@@ -162,7 +162,7 @@ const RecommendationBasicRequestSchema = z.object({
         | "healing" | "relationships" | "protection" | "defense";
 }
 ```
-- **처리 로직**: `desire` → 내부 목적 그룹(5종: `love_romance`, `health_vitality`, `study`, `healing_relationships`, `protection_defense`) → 사람이 정리한 오행×목적 매핑 표에서 해당 그룹에 속한 원석 slug 목록 조회 → 기존 `Stone` 테이블에서 실제 데이터 조회(없는 slug는 조용히 제외). 결정론적 규칙 엔진(`recommend()`)은 사용하지 않는다 — 사주 입력이 없어 오행 신호가 없기 때문.
+- **처리 로직**: `desire` → 내부 목적 그룹(5종: `love_romance`, `health_vitality`, `study`, `healing_relationships`, `protection_defense`) → 사람이 정리한 오행×목적 매핑 표에서 해당 그룹에 속한 원석 slug 목록 조회(순서 유지) → 기존 `Stone` 테이블에서 실제 데이터 조회(없는 slug는 조용히 제외). 결정론적 규칙 엔진(`recommend()`)은 사용하지 않는다 — 사주 입력이 없어 오행 신호가 없기 때문. 매핑 순서상 첫 번째 원석을 "가장 어울리는 원석"(`topStone`)으로 보고, 오행 분석(S06~S08)과 동일한 방식으로 LLM 카피(마음 요약/추천 이유/위로의 말/오늘의 작은 행동)를 생성한다. 나머지(`otherStones`)는 카피 없이 목록으로만 제공한다.
 - **요청 예시**
 ```json
 { "desire": "love" }
@@ -170,18 +170,25 @@ const RecommendationBasicRequestSchema = z.object({
 - **성공 응답 예시 (200)**
 ```json
 {
-  "stones": [
-    { "id": "...", "slug": "turquoise", "nameKo": "터키석", "nameEn": "Turquoise", "colorHex": "#3FB8AF", "imageUrl": "/images/jewelry/turquoise.png", "summary": "..." },
+  "topStone": {
+    "id": "...", "slug": "turquoise", "nameKo": "터키석", "nameEn": "Turquoise",
+    "colorHex": "#3FB8AF", "imageUrl": "/images/jewelry/turquoise.png",
+    "heartSummary": "...", "rationale": "...", "comfortLines": ["...", "..."],
+    "microAction": "...", "usedFallback": false
+  },
+  "otherStones": [
     { "id": "...", "slug": "amazonite", "nameKo": "아마조나이트", "nameEn": "Amazonite", "colorHex": "...", "imageUrl": "...", "summary": "..." }
   ]
 }
 ```
+매핑에 후보가 전혀 없는 조합이면 `{ "topStone": null, "otherStones": [] }`을 반환한다(현재 9개 염원은 모두 최소 1개 이상의 후보가 있어 실제로는 발생하지 않는다).
 - **오류 응답**: `VALIDATION_ERROR`(`desire`가 9개 값 중 하나가 아님), `UNAUTHORIZED`.
 - **Rate limit**: 세션당 분당 10회.
-- **Idempotency**: 멱등(같은 `desire`는 항상 같은 목록을 반환, DB에 아무것도 쓰지 않는다).
-- **매핑 데이터 출처**: [src/lib/desire/mapping.ts](src/lib/desire/mapping.ts) — 원안(오행×목적 표)에 있던 원석 중 실제 23종 카탈로그에 없는 것(20여 종)은 임의로 대체하지 않고 제외했다. 매핑에 후보가 없는 조합은 빈 배열을 반환하며, 현재 9개 염원은 모두 최소 1개 이상의 후보를 가진다([13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조).
+- **Idempotency**: 비멱등에 가깝다 — 같은 `desire`는 항상 같은 `topStone`/`otherStones` 원석 목록을 반환하지만(DB에 아무것도 쓰지 않음), `heartSummary` 등 LLM 카피 문구는 호출마다 새로 생성되어 문구 자체는 매번 달라질 수 있다.
+- **매핑 데이터 출처**: [src/lib/desire/mapping.ts](src/lib/desire/mapping.ts) — 원안(오행×목적 표)에 있던 원석 중 실제 23종 카탈로그에 없는 것(20여 종)은 임의로 대체하지 않고 제외했다([13-decisions-and-open-questions.md](13-decisions-and-open-questions.md) 참조).
+- **개인정보 처리**: 입력에 개인정보가 없다(`desire` 값만). LLM 프롬프트에도 생년월일 등 민감정보가 들어가지 않는다.
 - **관련 화면**: S01-D.
-- **테스트 케이스**: `src/lib/desire/mapping.test.ts`, `src/app/api/v1/recommendations/desire/route.test.ts`, `e2e/entry-mode-flow.spec.ts`.
+- **테스트 케이스**: `src/lib/desire/mapping.test.ts`, `src/lib/llm/generateDesireCopy.test.ts`, `src/app/api/v1/recommendations/desire/route.test.ts`, `e2e/entry-mode-flow.spec.ts`.
 
 ---
 

@@ -10,10 +10,13 @@ test.describe("메인 화면 추천 방식 분기", () => {
     await page.waitForURL("**/desire");
 
     await page.getByRole("button", { name: /사랑/ }).click();
-    await expect(page.getByText("이 마음에 어울리는 원석이에요")).toBeVisible({
+    await expect(page.getByText("가장 어울리는 원석")).toBeVisible({
       timeout: 15_000,
     });
-    await expect(page.getByText("터키석")).toBeVisible();
+    await expect(page.getByRole("heading", { name: /터키석/ })).toBeVisible();
+    await expect(page.getByText("마음 요약")).toBeVisible();
+    await expect(page.getByText("위로의 말")).toBeVisible();
+    await expect(page.getByText("그 외의 원석")).toBeVisible();
   });
 
   test("내 사주로 추천받기: 소원/감정 선택 없이 바로 생년월일 입력으로 간다", async ({

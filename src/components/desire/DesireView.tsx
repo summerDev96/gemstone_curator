@@ -34,7 +34,7 @@ const DESIRE_ORDER: UserDesire[] = [
   "defense",
 ];
 
-interface DesireStone {
+interface DesireOtherStone {
   id: string;
   slug: string;
   nameKo: string;
@@ -44,12 +44,21 @@ interface DesireStone {
   summary: string;
 }
 
+interface DesireTopStone extends DesireOtherStone {
+  heartSummary: string;
+  rationale: string;
+  comfortLines: string[];
+  microAction: string;
+  usedFallback: boolean;
+}
+
 type Step = "select" | "loading" | "result" | "error";
 
 export function DesireView() {
   const router = useRouter();
   const [step, setStep] = useState<Step>("select");
-  const [stones, setStones] = useState<DesireStone[]>([]);
+  const [topStone, setTopStone] = useState<DesireTopStone | null>(null);
+  const [otherStones, setOtherStones] = useState<DesireOtherStone[]>([]);
 
   async function selectDesire(desire: UserDesire) {
     setStep("loading");
@@ -65,7 +74,8 @@ export function DesireView() {
         return;
       }
       const body = await res.json();
-      setStones(body.stones ?? []);
+      setTopStone(body.topStone ?? null);
+      setOtherStones(body.otherStones ?? []);
       setStep("result");
     } catch {
       setStep("error");
@@ -125,46 +135,100 @@ export function DesireView() {
     );
   }
 
+  if (!topStone) {
+    return (
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4">
+        <TrackView event="desire_result_view" />
+        <StepHeader step={1} totalSteps={1} onBack={() => setStep("select")} />
+        <p className="pt-6 text-base text-text-secondary">
+          아직 이 염원에 등록된 원석이 없어요.
+        </p>
+        <div className="flex flex-col gap-3 pb-8 pt-6">
+          <PrimaryButton variant="secondary" onClick={() => router.push("/")}>
+            처음으로
+          </PrimaryButton>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4">
       <TrackView event="desire_result_view" />
       <StepHeader step={1} totalSteps={1} onBack={() => setStep("select")} />
-      <h1 className="pt-2 text-xl font-semibold text-text-primary">
-        이 마음에 어울리는 원석이에요
-      </h1>
 
-      {stones.length === 0 ? (
-        <p className="pt-6 text-base text-text-secondary">
-          아직 이 염원에 등록된 원석이 없어요.
-        </p>
-      ) : (
-        <div className="flex flex-col gap-4 py-6">
-          {stones.map((stone) => (
-            <div
-              key={stone.id}
-              className="flex items-center gap-4 rounded-[var(--radius-md)] border border-border-subtle bg-bg-surface p-4"
-            >
-              <StoneAvatar
-                imageUrl={stone.imageUrl}
-                colorHex={stone.colorHex}
-                alt={stone.nameKo}
-                size={64}
-              />
-              <div>
-                <p className="font-semibold text-text-primary">
-                  {stone.nameKo}
-                  <span className="pl-2 text-sm font-normal text-text-secondary">
-                    {stone.nameEn}
-                  </span>
-                </p>
-                <p className="pt-1 text-sm text-text-secondary">{stone.summary}</p>
+      <section className="flex flex-col items-center gap-3 py-4 text-center">
+        <StoneAvatar
+          imageUrl={topStone.imageUrl}
+          colorHex={topStone.colorHex}
+          alt={topStone.nameKo}
+          size={112}
+        />
+        <h1 className="text-lg font-semibold text-text-primary">
+          {topStone.nameKo}
+          <span className="pl-2 text-sm font-normal text-text-secondary">
+            {topStone.nameEn}
+          </span>
+        </h1>
+        <p className="text-sm text-text-secondary">가장 어울리는 원석</p>
+      </section>
+
+      <div className="flex flex-col gap-6 py-4">
+        <div>
+          <h2 className="pb-2 text-sm font-medium text-text-secondary">마음 요약</h2>
+          <p className="text-base text-text-primary">{topStone.heartSummary}</p>
+        </div>
+        <div>
+          <h2 className="pb-2 text-sm font-medium text-text-secondary">추천 이유</h2>
+          <p className="text-base text-text-primary">{topStone.rationale}</p>
+        </div>
+        <div>
+          <h2 className="pb-2 text-sm font-medium text-text-secondary">위로의 말</h2>
+          <ul className="flex flex-col gap-1">
+            {topStone.comfortLines.map((line) => (
+              <li key={line} className="text-base text-text-primary">
+                {line}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h2 className="pb-2 text-sm font-medium text-text-secondary">오늘의 작은 행동</h2>
+          <p className="text-base text-text-primary">{topStone.microAction}</p>
+        </div>
+      </div>
+
+      {otherStones.length > 0 && (
+        <div className="pt-4">
+          <h2 className="pb-3 text-sm font-medium text-text-secondary">그 외의 원석</h2>
+          <div className="flex flex-col gap-3">
+            {otherStones.map((stone) => (
+              <div
+                key={stone.id}
+                className="flex items-center gap-4 rounded-[var(--radius-md)] border border-border-subtle bg-bg-surface p-3"
+              >
+                <StoneAvatar
+                  imageUrl={stone.imageUrl}
+                  colorHex={stone.colorHex}
+                  alt={stone.nameKo}
+                  size={48}
+                />
+                <div>
+                  <p className="font-medium text-text-primary">
+                    {stone.nameKo}
+                    <span className="pl-2 text-sm font-normal text-text-secondary">
+                      {stone.nameEn}
+                    </span>
+                  </p>
+                  <p className="pt-1 text-sm text-text-secondary">{stone.summary}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
-      <div className="flex flex-col gap-3 pb-8">
+      <div className="flex flex-col gap-3 pb-8 pt-6">
         <PrimaryButton variant="secondary" onClick={() => router.push("/")}>
           처음으로
         </PrimaryButton>

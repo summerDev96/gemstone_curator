@@ -68,18 +68,21 @@ e2e/                           # Playwright E2E 스펙
 
 | 변수명                         | 용도                                                                                                                                    |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                 | PostgreSQL 연결 문자열 (예: `postgresql://<user>@localhost:5432/gemstonecurator_dev`)                                                   |
-| `DATABASE_URL_TEST`            | 테스트용 별도 DB 연결 문자열(Vitest 통합 테스트가 사용)                                                                                 |
+| `DATABASE_URL`                 | 앱 런타임 PostgreSQL 연결 문자열. 로컬에서는 개발 DB, Vercel Preview/Production에서는 관리형 DB가 제공한 **pooled** URL을 사용합니다. |
+| `DATABASE_URL_TEST`            | 테스트용 별도 DB 연결 문자열. Vitest가 테스트 실행 중에만 `DATABASE_URL`로 대체합니다.                                                  |
 | `SESSION_TOKEN_PEPPER`         | 세션 토큰 해시 생성용 pepper (임의의 긴 무작위 문자열, 직접 생성)                                                                       |
 | `OPENAI_API_KEY`               | OpenAI API 키                                                                                                                           |
 | `OPENAI_MODEL`                 | 사용할 OpenAI 모델명(직접 지정, 기본값 없음)                                                                                            |
 | `OPENAI_REASONING_EFFORT`      | 추론 모델(GPT-5 계열 등) 사용 시 권장 `minimal`. 생략 가능                                                                              |
 | `FORCE_LLM_FALLBACK_FOR_TESTS` | 테스트 전용. `1`로 설정 시 LLM 호출이 항상 실패하도록 강제(fallback 경로 재현). 프로덕션에서는 무시됨                                   |
-| `SHADOW_DATABASE_URL`          | `prisma migrate diff`/`dev`용 섀도 DB 연결 문자열(`createdb gemstonecurator_shadow`로 생성)                                             |
+| `SHADOW_DATABASE_URL`          | 로컬 `prisma migrate diff`/`dev`용 섀도 DB 연결 문자열(`createdb gemstonecurator_shadow`로 생성)                                      |
+| `DIRECT_DATABASE_URL`          | 선택 사항. `prisma migrate deploy` 등 CLI migration이 우선 사용할 관리형 DB의 direct URL입니다. 없으면 기존처럼 `DATABASE_URL`을 사용합니다. |
 | `ENCRYPTION_KEK`               | 생년월일시 등 민감 필드 envelope encryption용 KEK. base64 인코딩된 32바이트 키(직접 생성, 실제 운영은 KMS 전환 필요 — `추가 검증 필요`) |
 | `NEXT_PUBLIC_APP_URL`          | 공유 링크 URL 생성 시 사용(미설정 시 요청 origin으로 대체)                                                                              |
 
 값은 `.env.local`에 직접 채우며(`.env.example`을 복사해서 시작), 절대 커밋하지 않습니다.
+
+`DATABASE_URL`과 `DIRECT_DATABASE_URL`은 서버 전용 secret입니다. 이름에 `NEXT_PUBLIC_` 접두사를 붙이거나 브라우저 코드에서 읽으면 안 됩니다.
 
 ## 개발 원칙
 
@@ -108,6 +111,37 @@ npm run prisma:migrate        # Prisma 마이그레이션 적용
 npm run prisma:seed            # 시드 데이터 적재
 npm run cleanup:sessions        # 만료된 비회원 세션 일괄 삭제(운영 스케줄러 연동은 추가 검증 필요)
 ```
+
+## Vercel 관리형 PostgreSQL 배포
+
+이 프로젝트는 `@prisma/adapter-pg`와 Node.js 런타임을 사용합니다. `src/lib/db.ts`는 모듈 import나 `next build` 중에는 DB 클라이언트를 만들지 않고, 실제 Prisma 쿼리가 처음 실행될 때만 `DATABASE_URL`을 읽습니다. 따라서 Vercel 빌드 명령에는 migration이나 seed를 추가하지 마십시오.
+
+1. Vercel Marketplace에서 Neon 등 PostgreSQL 서비스를 프로젝트에 연결하고 Preview와 Production에 사용할 DB/브랜치를 준비합니다. Marketplace 연동이 환경변수를 자동 주입하더라도, 아래 변수명이 프로젝트에 실제로 설정됐는지 확인합니다.
+2. Vercel 프로젝트의 **Settings → Environment Variables**에서 Preview와 Production 각각의 `DATABASE_URL`을 서비스가 제공한 **pooled connection URL**로 설정합니다. Neon은 연결 상세에서 **Pooled connection**을 선택하며, 해당 hostname에는 일반적으로 `-pooler`가 포함됩니다. URL은 Vercel UI에만 입력하고 저장소·이슈·로그에 복사하지 않습니다.
+3. 선택 사항으로, migration을 실행하는 제한된 로컬/CI 환경에만 같은 DB의 direct connection URL을 `DIRECT_DATABASE_URL`로 주입합니다. `prisma.config.ts`는 이 값을 우선 사용하고, 로컬 환경에서 이 값이 없으면 기존 `DATABASE_URL`을 그대로 사용합니다. `SHADOW_DATABASE_URL`은 로컬 `migrate dev`용이며 Vercel 런타임에는 필요하지 않습니다.
+4. 배포 전에 DB 변경을 별도 작업으로 적용합니다. 비밀값을 명령줄 인수나 저장소 파일에 넣지 말고 secret environment에서 주입한 뒤 실행합니다.
+
+   ```bash
+   npx prisma migrate deploy
+   ```
+
+   `prisma migrate deploy`는 Vercel의 Build Command가 아니라, 권한이 제한된 운영자 또는 CI job에서 명시적으로 실행합니다. `DIRECT_DATABASE_URL`이 있으면 direct URL을, 없으면 `DATABASE_URL`을 사용합니다.
+
+5. 최초 DB 준비 때만 seed를 별도로 실행합니다. `prisma/seed.ts`는 앱 런타임과 마찬가지로 `DATABASE_URL`을 읽습니다. 서비스가 direct URL을 제공하고 사용을 권장하면, 이 일회성 실행 프로세스의 `DATABASE_URL`에 direct URL을 안전하게 주입할 수 있습니다.
+
+   ```bash
+   npm run prisma:seed
+   ```
+
+   이 명령도 Vercel Build Command에 추가하지 않습니다. 운영 DB에 seed를 재실행하기 전에는 `prisma/seed.ts`의 upsert/비활성화 동작을 검토하십시오.
+
+6. 환경변수를 저장한 뒤 각각 새 Preview 배포와 Production 배포를 생성합니다. Vercel의 함수 로그에 URL, 토큰, 사용자 입력 같은 secret 또는 개인정보를 출력하지 마십시오.
+
+### 배포 후 DB 연결 확인
+
+1. 배포된 사이트에서 새 비회원 세션을 만든 뒤, 브라우저 개발자 도구 또는 HTTP 클라이언트로 `POST /api/v1/sessions`를 호출해 받은 `sessionToken`을 보관합니다. 토큰은 로그·스크린샷·이슈에 남기지 않습니다.
+2. 같은 배포 URL에서 `Authorization: Bearer <sessionToken>` 헤더를 넣어 `GET /api/v1/catalog/wishes`를 호출합니다. `wishes`, `emotions`, `relationshipGoals` 배열을 포함한 HTTP 200 응답이면 pooled 런타임 연결과 초기 seed를 함께 확인한 것입니다.
+3. 500 응답이면 먼저 Vercel의 해당 환경(Preview 또는 Production)에 `DATABASE_URL`이 있는지, 그것이 pooled URL인지, 그리고 migration·seed가 해당 DB/브랜치에 적용됐는지 확인합니다. `DATABASE_URL 환경변수가 설정되지 않았습니다.` 오류는 런타임 환경변수 미설정을 뜻합니다. 반대로 이 메시지가 아니라 Prisma 또는 PostgreSQL 연결 오류가 첫 쿼리에서 발생하면 URL은 주입됐지만 pooled URL·TLS 옵션·DB/브랜치 접근 권한·서비스 상태를 확인해야 합니다. URL 전체나 credential은 로그에 남기지 않습니다.
 
 Phase 2/3 착수 전에는 [AGENTS.md](AGENTS.md)와 [11. 구현 로드맵](docs/11-implementation-roadmap.md)을 먼저 확인하세요.
 

@@ -1,7 +1,7 @@
 # 13. 결정 사항 및 미해결 질문 — 원석 큐레이터
 
 - 문서 버전: 0.2.0
-- 최종 수정일: 2026-09-12 (Asia/Seoul)
+- 최종 수정일: 2026-09-15 (Asia/Seoul)
 - 상태: Draft
 
 ## 확정된 제품 결정
@@ -44,6 +44,7 @@
 | "내 염원" 매핑 표에 있던 원석 중 실제 23종 카탈로그에 없는 것(말라카이트, 문스톤, 호안석류, 침수정류, 옵시디언 등 20여 종)은 대체하지 않고 후보에서 제외한다. 그 결과 "학업" 목적 그룹은 후보가 라피스라줄리 1개뿐인 등 그룹별로 후보 수가 들쭉날쭉하다 | 매핑 표 대부분이 현재 카탈로그에 없는 원석을 참조하고 있어, "근거 없이 새 원석을 추가하지 않는다"는 원칙을 지키면 자연히 후보가 줄어든다. 카탈로그를 새로 확장하는 대안도 제시했으나 사용자가 "있는 것만 사용, 나머지는 빈 배열"을 선택 | 카탈로그 확장(원석 20여 종의 이미지·설명·fallback 카피를 새로 준비해야 하는 큰 작업이라 미채택), 비슷한 색상/의미의 기존 원석으로 임의 대체(미채택 — 근거 없는 대체 금지 원칙과 정면으로 충돌) |
 | "내 염원" 결과 화면에 오행 분석(S06~S08)과 동일한 형태의 마음 요약/추천 이유/위로의 말/오늘의 작은 행동(LLM 카피)을 추가했다. 매핑 순서상 1등 원석("가장 어울리는 원석")에만 카피를 생성하고, 나머지("그 외의 원석")는 요약 문구만 표시한다 | 사용자가 "사주 기반으로 선택했을 때처럼 마음 요약/위로 문구가 나왔으면 좋겠다", "가장 어울리는 원석을 맨 위에, 나머지는 하단으로"라고 명시적으로 요청. 모든 후보에 카피를 생성하면 불필요한 LLM 호출이 늘어나므로(일부 목적 그룹은 후보가 6개), 이미 화면에서 강조하기로 한 1등 원석에만 생성 | 모든 후보 원석에 카피 생성(미채택 — 사용자가 "가장 어울리는 원석"을 맨 위에 강조하길 원해 1개만으로 충분하고, 비용도 불필요하게 늘어남) |
 | **Vercel 배포 빌드 실패를 3단계에 걸쳐 수정했다**: (1) `package.json`에 `"postinstall": "prisma generate"` 추가, (2) `prisma.config.ts`가 `env("DATABASE_URL")`(값이 없으면 즉시 예외를 던지는 엄격한 헬퍼)을 쓰던 것을 `process.env.DATABASE_URL`(값이 없어도 `undefined`로 통과) 직접 참조로 변경, (3) `src/lib/db.ts`의 `PrismaClient` 생성을 모듈 최상단 즉시 실행에서 `Proxy` 기반 지연 생성으로 변경 | 세 가지 원인이 순차적으로 드러났다. ① Vercel의 `npm install`이 Prisma Client를 생성하지 않아 타입체크가 실패(로컬은 이 세션 내내 수동으로 `npx prisma generate`를 반복 실행해 발견되지 않았던 배포 전용 결함) → `postinstall`로 해결. ② `postinstall`이 동작하자 이번엔 `prisma generate` 자체가 `Cannot resolve environment variable: DATABASE_URL`로 실패 — Vercel 빌드 환경에 DATABASE_URL이 아직 없는데(사용자가 아직 Vercel 프로젝트 환경변수에 설정하지 않음) `prisma.config.ts`가 `generate`처럼 실제 DB 연결이 필요 없는 명령에서도 이 값을 엄격히 요구했기 때문 → `env()` 대신 `process.env.DATABASE_URL`을 그대로 넘기도록 완화(런타임 실제 DB 연결은 이 파일과 무관하게 `src/lib/db.ts`가 별도로 검증). ③ `prisma generate`까지 통과한 뒤에도, `next build`의 "Collecting page data" 단계가 API 라우트 모듈을 import만 해도 `src/lib/db.ts` 최상단의 `export const prisma = ... ?? createPrismaClient()`가 즉시 실행되어 DATABASE_URL 부재 시 빌드가 깨졌다 → 클라이언트 생성을 실제 첫 쿼리 시점까지 미루는 `Proxy`로 변경. `.env.local`을 임시로 치우고 `npm install`부터 `npm run build`까지 환경변수 없이(`env -i`) 재현·검증했다 | ③에서 `if (!connectionString) throw ...` 가드 자체를 제거하는 방법(미채택 — 실제 배포 환경에서 DATABASE_URL을 깜빡했을 때 원인을 알기 어려운 Postgres 연결 오류만 남게 됨. Proxy로 지연시키면 그 명확한 오류 메시지를 유지하면서 빌드 타임에는 트리거되지 않게 할 수 있음) |
+| **Vercel production DB(Neon)의 스키마 drift를 초기화 후 재마이그레이션으로 해결했다.** `prisma migrate reset --force`로 기존 테이블·데이터를 전부 삭제하고 로컬 `prisma/migrations` 7개를 처음부터 재적용한 뒤, `prisma db seed`로 catalog(태그 17개·원석 23개·원석-태그 매핑 109개)를 재생성했다 | 빌드는 성공했지만 `/api/v1/sessions` 호출이 production에서 계속 실패한다는 신고를 조사한 결과, Vercel의 `DATABASE_URL`은 (처음 의심했던 로컬 `localhost` 값이 아니라) 실제 Neon Postgres였는데 3일 전 최초 연동 시점의 구버전 마이그레이션 2개(`20260911000000_init`, `20260911010000_do_not_store_free_text` — 로컬 저장소에는 존재하지 않는 이름)만 적용돼 있어 "공통 조상 없음" 상태였다. 예를 들어 `AnonymousSession` 테이블이 `tokenHash`/`id(text)` 컬럼을 갖고 있었는데 현재 스키마는 `sessionTokenHash`/`id(uuid)`/`lastSeenAt`을 기대해 INSERT가 항상 실패했고, Phase 2/3에서 추가된 `FiveElementProfile`/`RelationshipAnalysis` 등 테이블은 아예 없었다. production에 남아있던 데이터(세션 9개·추천 6개·소원세션 6개·피드백 2개·원석 5개)는 전부 2026-09-12 생성 이력으로, 이번 세션 개발 중 생긴 테스트 데이터로 확인되어 사용자에게 초기화 여부를 직접 확인한 뒤 진행했다. Prisma CLI 자체가 "AI 에이전트가 위험한 명령을 실행하려 한다"고 감지해 `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` 환경변수로 사용자의 명시적 동의 문구를 재확인하도록 요구했고, 별도 확인 질문으로 "예, 진행해줘"를 받은 뒤에만 실행했다. 재적용 후 `prisma migrate status`(up to date)와 `AnonymousSession` insert/delete 스모크 테스트로 검증했다 | 기존 데이터를 보존한 채 테이블별 컬럼 rename/ALTER + 데이터 이관 스크립트 작성(미채택 — Phase 2/3 신규 테이블은 어차피 비어 있어야 했고 남은 데이터가 전부 테스트성이라 보존 비용 대비 이득이 적음) |
 
 ## 대안 검토 메모
 
@@ -74,6 +75,7 @@
 - 위기 표현 감지 정확도가 낮으면(과소 감지) 사용자 안전에, (과다 감지) 사용자 경험에 각각 악영향을 준다 → fail-safe(과다 감지 방향으로 보수적 설계) 원칙을 유지한다([09-ai-prompts-and-safety.md](09-ai-prompts-and-safety.md)).
 - LLM 국외 이전 관련 법적 요건 미검토 시 컴플라이언스 리스크가 있다 → Phase 1 LLM 연동 전 법무 검토를 선행 권장한다.
 - ~~비회원 세션의 민감정보(생년월일시) 삭제 경로 부재~~ → `DELETE /sessions/current`와 만료 세션 정리(즉시 정리 + 배치 스크립트)로 해결했다([07-api-specification.md](07-api-specification.md#delete-sessionscurrent), [11-implementation-roadmap.md](11-implementation-roadmap.md#실제-구현-참고-phase-2-삭제-경로) 참조). 남은 위험은 배치 스크립트를 실제 스케줄러에 연결하는 인프라 작업뿐이다.
+- Vercel 배포 파이프라인(`package.json`의 `build`/`postinstall`)에 `prisma migrate deploy`가 포함되어 있지 않다 → 이번에 production DB를 최신 마이그레이션까지 수동으로 맞췄지만, 앞으로 새 마이그레이션이 추가될 때마다 배포 전후로 사람이 직접 `prisma migrate deploy`를 실행하지 않으면 production 스키마가 다시 코드와 어긋날 수 있다. 배포 스크립트에 자동 반영할지는 `추가 검증 필요`(인프라 담당 확인 필요).
 
 ## ADR 후보
 
